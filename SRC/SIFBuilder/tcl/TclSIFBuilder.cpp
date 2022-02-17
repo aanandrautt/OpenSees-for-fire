@@ -69,6 +69,7 @@ using std::setiosflags;
 #include <Convection.h>
 
 #include <CarbonSteelEC3.h>
+#include <AluminumEC9.h>
 #include <ConcreteEC2.h>
 #include <BoundaryPattern.h>
 #include <FireImposedPattern.h>

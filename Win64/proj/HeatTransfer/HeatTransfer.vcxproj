@@ -127,6 +127,7 @@
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\Iterator\MP_TempBCIter.cpp" />
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\Iterator\TempBCIter.cpp" />
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\TimeSeries\SineTimeSeries.cpp" />
+    <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AluminumEC9.cpp" />
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AnisotropicMaterial\AnisotropicMaterial.cpp" />
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\CarbonSteelEC3.cpp" />
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\ConcreteEC2.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\Iterator\TempBCIter.h" />
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\Iterator\TemperatureBCIter.h" />
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferDomain\TimeSeries\SineTimeSeries.h" />
+    <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AluminumEC9.h" />
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AnisotropicMaterial\AnisotropicMaterial.h" />
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\CarbonSteelEC3.h" />
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\ConcreteEC2.h" />

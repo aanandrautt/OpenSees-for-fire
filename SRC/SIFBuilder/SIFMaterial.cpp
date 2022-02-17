@@ -34,6 +34,7 @@
 
 #include <SIFMaterial.h>
 #include <CarbonSteelEC3.h>
+#include <AluminumEC9.h>
 #include <ConcreteEC2.h>
 #include <Concrete02Thermal.h>
 #include <SimpleMaterial.h>

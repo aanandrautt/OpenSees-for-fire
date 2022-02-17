@@ -62,6 +62,7 @@ using std::setiosflags;
 
 
 #include <CarbonSteelEC3.h>
+#include <AluminumEC9.h>
 #include <ConcreteEC2.h>
 #include <SimpleMaterial.h>
 #include <SFRMCoating.h>
@@ -508,6 +509,12 @@ int OPS_addHTMaterial()
 	if (strcmp(HTmatType, "SteelEC3") == 0 || strcmp(HTmatType, "CarbonSteelEC3") == 0) {
 
 		theHTMaterial = new CarbonSteelEC3(HTMaterialTag);
+
+	}
+	// Adding aluminum Mhd Anwar Orabi 2022
+	else if (strcmp(HTmatType, "AluminumEC9") == 0 || strcmp(HTmatType, "aluminum") == 0) {
+
+		theHTMaterial = new AluminumEC9(HTMaterialTag);
 
 	}
 	//Adding ConcreteEC2

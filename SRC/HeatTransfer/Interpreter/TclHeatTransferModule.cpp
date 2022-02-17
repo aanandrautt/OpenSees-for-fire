@@ -62,6 +62,7 @@ using std::setiosflags;
 
 
 #include <CarbonSteelEC3.h>
+#include <AluminumEC9.h>
 #include <ConcreteEC2.h>
 #include <SimpleMaterial.h>
 #include <SFRMCoating.h>
@@ -611,6 +612,12 @@ TclHeatTransferCommand_addHTMaterial(ClientData clientData, Tcl_Interp *interp, 
 		theHTMaterial = new CarbonSteelEC3(HTMaterialTag);
 
 	}
+    // Adding AluminumEC9 - Mhd Anwar Orabi 2022
+    if (strcmp(argv[1], "AluminumEC9") == 0 || strcmp(argv[1], "aluminum") == 0) {
+
+        theHTMaterial = new AluminumEC9(HTMaterialTag);
+
+    }
 	//Adding ConcreteEC2
 	else if(strcmp(argv[1],"ConcreteEC2") == 0){
 	  

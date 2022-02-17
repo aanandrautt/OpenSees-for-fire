@@ -342,6 +342,9 @@
     <ClCompile Include="..\..\..\SRC\HeatTransfer\HTRecorder\HTMaterialResponse.cpp">
       <Filter>HTRecorder</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AluminumEC9.cpp">
+      <Filter>HeatTransferMaterial</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\CarbonSteelEC3.h">
@@ -607,6 +610,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\SRC\HeatTransfer\HTRecorder\HTMaterialResponse.h">
       <Filter>HTRecorder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\HeatTransfer\HeatTransferMaterial\AluminumEC9.h">
+      <Filter>HeatTransferMaterial</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

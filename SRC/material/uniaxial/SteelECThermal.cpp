@@ -407,6 +407,7 @@ double linearly_interpolate(double x, double x_initial, double x_final, double y
 	/**
 	* Linearly interpolates the value of y for a given x, given the x and y pairs for preceding and 
 	* following points on the interpolated line.
+	* Added by Mhd Anwar Orabi 2022
 	*/
 	return y_initial + (x - x_initial) * (y_final - y_initial) / (x_final - x_initial);
 }
@@ -422,6 +423,7 @@ SteelECThermal::getElongTangent(double TempT, double &ET, double &Elong, double 
 	{
 		// typeTag = 6: EN 1999-1-2:2007 Design of aluminum structures.
 		// proof strength factors for Aluminum EN AW-6061 T6 from Table 1a, and modulus of elasticity for all grades from Table 2
+		// Added by Mhd Anwar Orabi 2022
 		double temperature_limits[11] = {0.0, 30.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 550.0, 1200.0};
 		// using a factor of 1.0e-3 in stead of 0 for factors at 550 C and above to avoid unnecessary numerical errors
 		double fp_factors[11] = {1.0, 0.98, 0.95, 0.91, 0.79, 0.55, 0.31, 0.1, 0.075, 1.0e-3, 1.0e-3};
