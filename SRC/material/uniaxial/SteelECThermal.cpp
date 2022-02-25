@@ -424,17 +424,22 @@ SteelECThermal::getElongTangent(double TempT, double &ET, double &Elong, double 
 		// typeTag = 6: EN 1999-1-2:2007 Design of aluminum structures.
 		// proof strength factors for Aluminum EN AW-6061 T6 from Table 1a, and modulus of elasticity for all grades from Table 2
 		// Added by Mhd Anwar Orabi 2022
-		double temperature_limits[11] = {0.0, 30.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 550.0, 1200.0};
+		double temperature_limits[11] = {0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 550.0, 1200.0};
 		// using a factor of 1.0e-3 in stead of 0 for factors at 550 C and above to avoid unnecessary numerical errors
 		double fp_factors[11] = {1.0, 0.98, 0.95, 0.91, 0.79, 0.55, 0.31, 0.1, 0.075, 1.0e-3, 1.0e-3};
 		double E0_factors[11] = { 1.0, 0.99, 0.97, 0.93, 0.86, 0.78, 0.68, 0.54, 0.357, 1.0e-3, 1.0e-3};
 		for (int i = 0; i < 10; i++)
 		{
-			double k_f = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], fp_factors[i], fp_factors[i + 1]);
-			double k_E = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], E0_factors[i], E0_factors[i + 1]);
-			fy = fyT * k_f;
-			fp = fyT * k_f;
-			E0 = E0T * k_E;
+			if (TempT <= temperature_limits[i])
+			{
+				double k_f = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], fp_factors[i], fp_factors[i + 1]);
+				double k_E = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], E0_factors[i], E0_factors[i + 1]);
+				fy = fyT * k_f;
+				fp = fyT * k_f;
+				E0 = E0T * k_E;
+				break;
+			}
+
 		}
 
 		// caculation of thermal elongation of aluminum following clause 3.3.1.1 from the EN 1999-1-2
