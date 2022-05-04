@@ -29,8 +29,10 @@
 
 
 #define OPS_VERSION "3.0.0"
-#define OPSF_VERSION "Anwar-RELEASE 3.2.7"
-#define OPS_LASTUPDATED "24/02/2022"
+#define OPSF_VERSION "Anwar-RELEASE 3.2.8"
+#define OPS_LASTUPDATED "4/05/2022"
+// Calcareous or Siliceous
+#define CDP_AGGREGATE "Calcareous"
 
 #ifndef _WIN64
 #define WIN_ARCH "32-Bit"

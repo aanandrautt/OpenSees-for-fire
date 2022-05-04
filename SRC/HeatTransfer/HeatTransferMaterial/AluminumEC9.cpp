@@ -23,7 +23,19 @@
 ** ****************************************************************** */
 
 //
-// Written by Yaqiang Jiang (y.jiang@ed.ac.uk)
+// Template written by Yaqiang Jiang (y.jiang@ed.ac.uk)
+//
+// AluminumEC9 written by Mohamed Anwar Orabi (maorabi@polyu.edu.hk)
+//
+
+
+//
+//
+// The properties of aluminum are only known until about 500 C, beyond which
+// the Eurocode does not provide details. This is often reached in fire situations 
+// and as such we had to go beyond the codified properties. In general, when
+// tempearture reaches above 500, the properties are taken as if they were at 500.
+//
 //
 
 #include <AluminumEC9.h>
@@ -109,8 +121,6 @@ AluminumEC9::getSpecificHeat(void)
 	} else if ((20.0 <= trial_temp) && (trial_temp < 500.0)) {
 		cp = trial_temp * 0.41 + 903;
 	} else {
-		opserr << "AluminumEC9::getSpecificHeat() - trial temperature " 
-				<< trial_temp << " > 500 C, which is the temperature for which aluminum properties are known.\n";
 		cp = 1108.0;
 		}
 
@@ -124,14 +134,19 @@ AluminumEC9::getEnthalpy()
     // * The enthalpy data here is obtained by integrating the spesific heat over
     // * the temperature range [0,500] given in EN 1999-1-2.
 	// * The analytical expresion is easily calcualted because the heat capacity is linear.
+	// * because a limit of 500 is very small, enthalpy is returned assuming a max temp of 500
 	if ((trial_temp >= 0.0) && (trial_temp <= 500))
 	{
 		enthalpy = 0.205 * trial_temp * trial_temp + 903 * trial_temp;
 	}
-	else 
+	else if ((trial_temp > 500.0) && (trial_temp < 1200.0))
+	{
+		enthalpy = 0.205 * 500.0 * 500.0 + 903.0 * 500.0;
+	}
+	else
 	{
 		opserr << "AluminumEC9::getEnthalpy(double temp) - nodal temperature "
-			<< trial_temp << " out of bounds of [0, 500]\n";
+			<< trial_temp << " out of bounds of [0, 1200]\n";
 		exit(-1);
 	}
 			
@@ -155,10 +170,14 @@ AluminumEC9::getEnthalpy(double temp)
 	{
 		enthp = 0.205 * nod_temp * nod_temp + 903 * nod_temp;
 	}
+	else if ((nod_temp > 500.0) && (nod_temp < 1200.0))
+	{
+		enthp = 0.205 * 500.0 * 500.0 + 903.0 * 500.0;
+	}
 	else
 	{
 		opserr << "AluminumEC9::getEnthalpy() - nodal temperature "
-			<< nod_temp << " out of bounds of [0, 500]\n";
+			<< nod_temp << " out of bounds of [0, 1200]\n";
 		exit(-1);
 	}
     return enthp;	

@@ -1116,8 +1116,22 @@ PlasticDamageConcretePlaneStressThermal::setThermalTangentAndElongation(double &
 		//Ets = 0;
 	}
 	
-	int matType =1; //Siliceous aggregates
-	//int matType =2;//Calcareous aggregates
+	int matType;
+	if (CDP_AGGREGATE == "Siliceous") 
+	{
+		matType = 1;
+	}
+	else if (CDP_AGGREGATE == "Calcareous")
+	{
+		matType = 2;
+	}
+	else 
+	{
+		matType = 1;
+		opserr << "WARNING: incorrect aggregate type defined for CDP in OPS_Globals.h\n Using Siliceous aggregate in stead. \n";
+	}
+	//int matType =1; //Siliceous aggregates
+	//int matType = 2;Calcareous aggregates
 
 	// compression strength, at elevated temperature
 	//   strain at compression strength, at elevated temperature

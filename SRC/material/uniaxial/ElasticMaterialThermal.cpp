@@ -81,6 +81,10 @@ OPS_ElasticMaterialThermal(void)
 	  else if ((strcmp(typeChar, "-ConcreteSoft") == 0) || (strcmp(typeChar, "-CSoft") == 0) || (strcmp(typeChar, "-cSoft") == 0)) {
 		  softindex = 2;
 	  }
+	  else if ((strcmp(typeChar, "-nosoft") == 0) || (strcmp(typeChar, "-NoSoft") == 0))
+	  {
+		  softindex = 3;
+	  }
   }
 
   dData2[0] = 0.0; dData2[1] = 0.0;
