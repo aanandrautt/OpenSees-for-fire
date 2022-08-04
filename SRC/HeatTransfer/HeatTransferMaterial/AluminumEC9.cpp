@@ -139,7 +139,7 @@ AluminumEC9::getEnthalpy()
 	{
 		enthalpy = 0.205 * trial_temp * trial_temp + 903 * trial_temp;
 	}
-	else if ((trial_temp > 500.0) && (trial_temp < 1200.0))
+	else if ((trial_temp > 500.0) && (trial_temp <= 1200.0))
 	{
 		enthalpy = 0.205 * 500.0 * 500.0 + 903.0 * 500.0;
 	}
@@ -170,7 +170,7 @@ AluminumEC9::getEnthalpy(double temp)
 	{
 		enthp = 0.205 * nod_temp * nod_temp + 903 * nod_temp;
 	}
-	else if ((nod_temp > 500.0) && (nod_temp < 1200.0))
+	else if ((nod_temp > 500.0) && (nod_temp <= 1200.0))
 	{
 		enthp = 0.205 * 500.0 * 500.0 + 903.0 * 500.0;
 	}
