@@ -3071,7 +3071,7 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 				  }
 				  if (argc - count == 4) {
 					  if (genInterpolation) {
-						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], 25);
+						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], 400);
 					  }
 					  else {
 						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 1], 15);

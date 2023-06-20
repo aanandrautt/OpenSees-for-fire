@@ -134,14 +134,14 @@ Beam3dThermalAction::Beam3dThermalAction(int tag, TimeSeries* theSeries,
 	:ElementalLoad(tag, LOAD_TAG_Beam3dThermalAction, theElementTag), theSeries(theSeries),
 	ThermalActionType(LOAD_TAG_Beam3dThermalAction)
 {
-	Loc[0] = locY1; Loc[4] = locY2; Loc[5] = locZ1; Loc[9] = locZ2;
+	Loc[0] = locY1; Loc[19] = locY2; Loc[20] = locZ1; Loc[39] = locZ2;
 
-	for (int i = 1; i < 4; i++) {
-		Loc[i] = Loc[0] + i * (Loc[4] - Loc[0]) / 4;    //locs through Y
-		Loc[5 + i] = Loc[5] + i * (Loc[9] - Loc[5]) / 4;  //locs through Z
+	for (int i = 1; i < 19; i++) {
+		Loc[i] = Loc[0] + i * (Loc[19] - Loc[0]) / 19;    //locs through Y
+		Loc[20 + i] = Loc[20] + i * (Loc[39] - Loc[20]) / 19;  //locs through Z
 	}
 	Factors.Zero();
-	for (int i = 0; i < 25; i++) {
+	for (int i = 0; i < 400; i++) {
 		Temp[i] = 0;   //Here the original temp is set as 1, which will be factorized by the value obtained from 
 		TempApp[i] = 0;
 	}
@@ -252,13 +252,13 @@ Beam3dThermalAction::getData(int &type, double loadFactor)
 	  
  } 
  else if (indicator == 6) {
-	 data.resize(35);
-	 for (int i = 0; i < 25; i++) {
+	 data.resize(440);
+	 for (int i = 0; i < 400; i++) {
 		 data(i) = TempApp[i];            //25 temps across the y-z cross section
 	 }
-	 for (int i = 0; i < 10; i++)
+	 for (int i = 0; i < 40; i++)
 	 {
-		 data(i+25) = Loc[i]; //5 locs through Y and then 5 through Z
+		 data(i+400) = Loc[i]; //5 locs through Y and then 5 through Z
 	 }
  }
  else{
@@ -293,7 +293,7 @@ Beam3dThermalAction::applyLoad(const Vector &factors)
 	   }
 	}
 	else if (indicator == 6) {
-		for (int i = 0; i < 25; i++) {
+		for (int i = 0; i < 400; i++) {
 			TempApp[i] = Temp[i] * factors(i);
 		}
 	}
@@ -340,7 +340,7 @@ Beam3dThermalAction::applyLoad(double loadfactor)
 	else if (indicator == 6) {
 		//Looking for loadfactors from timeseries;
 		Factors = ((PathTimeSeriesThermal*)theSeries)->getFactors(loadfactor);
-		for (int i = 0; i < 25; i++) {
+		for (int i = 0; i < 400; i++) {
 			//PathTimeSeriesThermal returns absolute temperature;
 			TempApp[i] = Factors(i);
 		}

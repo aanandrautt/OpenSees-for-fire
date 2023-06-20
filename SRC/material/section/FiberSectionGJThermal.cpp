@@ -819,7 +819,7 @@ FiberSectionGJThermal::recvSelf(int commitTag, Channel &theChannel,
       }
     }
 
-    Vector fiberData(matData, 3*numFibers);
+    Vector fiberData(matData, 3 * numFibers);
     res += theChannel.recvVector(dbTag, commitTag, fiberData);
     if (res < 0) {
       opserr << "FiberSection2d::recvSelf - failed to send material data\n";
@@ -1229,8 +1229,54 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             return FiberTemperature;
         }
     }
+    // modified by Anand Kumar (anandk.iitj@gmail.com) [2023] in view of rectangular RC section; 400 temperature points are defined
+    else if (DataMixed.Size() == 440) {
+        //---------------if temperature Data has 35 elements--------------------
+
+        double dataTempe[440]; //
+        for (int i = 0; i < 440; i++) { //
+            dataTempe[i] = DataMixed(i);
+        }
+
+        if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[19]) <= 1e-10 && fabs(dataTempe[399]) <= 1e-10 && fabs(dataTempe[380]) <= 1e-10 && fabs(dataTempe[190]) <= 1e-10) //no tempe load
+        {
+            return 0;
+        }
+        // Added by Mhd Anwar Orabi 2021
+        //Check if we are out of bounds anywhere
+        if (fiberLocy < dataTempe[400])
+        {
+            opserr << "WARNING: Fiber location locy: " << fiberLocy << " below minimum Y " << dataTempe[400] << " of the defined thermal load area." << endln;
+        }
+        else if (fiberLocy > dataTempe[419]) {
+            opserr << "WARNING: Fiber location locy: " << fiberLocy << " above maximum Y " << dataTempe[419] << " of the defined thermal load area." << endln;
+
+        }
+        else if (fiberLocz < dataTempe[420]) {
+            opserr << "WARNING: Fiber location locz: " << fiberLocz << " below minimum Z " << dataTempe[420] << " of the defined thermal load area." << endln;
+        }
+        else if (fiberLocz > dataTempe[439]) {
+            opserr << "WARNING: Fiber location locz: " << fiberLocz << " above maximum Z " << dataTempe[439] << " of the defined thermal load area." << endln;
+        }
+        // perform the bi-linear interpolation
+        for (int i = 1; i < 20; i++) {
+            if (fiberLocz <= dataTempe[i + 420]) {
+                for (int j = 1; j < 20; j++) {
+                    if (fiberLocy <= dataTempe[j + 400]) {
+                        // interpolate across Z = Zi-1:
+                        double Tzi_1 = dataTempe[i + 20 * j - 21] + (fiberLocy - dataTempe[j + 400 - 1]) * (dataTempe[i + 20 * j - 1] - dataTempe[i + 20 * j - 21]) / (dataTempe[j + 400] - dataTempe[j + 400 - 1]);
+                        // interpolate across Z = Zi:
+                        double Tzi = dataTempe[i + 20 * j - 20] + (fiberLocy - dataTempe[j + 400 - 1]) * (dataTempe[i + 20 * j] - dataTempe[i + 20 * j - 20]) / (dataTempe[j + 400] - dataTempe[j + 400 - 1]);
+                        // interpolate across Y = fiberLocy:
+                        return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + 420 - 1]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + 420] - dataTempe[i + 420 - 1]);
+                    }
+                }
+            }
+        }
+    }
+
     
-    else if (DataMixed.Size() == 35) {
+   /* else if (DataMixed.Size() == 35) {
         //---------------if temperature Data has 35 elements--------------------
 
         double dataTempe[35]; //
@@ -1238,7 +1284,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             dataTempe[i] = DataMixed(i);
         }
 
-        if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[4]) <= 1e-10 && fabs(dataTempe[24]) <= 1e-10 && fabs(dataTempe[20]) <= 1e-10 && fabs(dataTempe[12]) <= 1e-10) //no tempe load
+        /*if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[4]) <= 1e-10 && fabs(dataTempe[24]) <= 1e-10 && fabs(dataTempe[20]) <= 1e-10 && fabs(dataTempe[12]) <= 1e-10) //no tempe load
         {
             return 0;
         }
@@ -1250,7 +1296,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         }
         else if (fiberLocy > dataTempe[29]) {
             opserr << "WARNING: Fiber location locy: " << fiberLocy << " above maximum Y " << dataTempe[29] << " of the defined thermal load area." << endln;
-
+        
         }
         else if (fiberLocz < dataTempe[30]) {
             opserr << "WARNING: Fiber location locz: " << fiberLocz << " below minimum Z " << dataTempe[30] << " of the defined thermal load area." << endln;
@@ -1258,6 +1304,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         else if (fiberLocz > dataTempe[34]) {
             opserr << "WARNING: Fiber location locz: " << fiberLocz << " above maximum Z " << dataTempe[34] << " of the defined thermal load area." << endln;
         }
+
         // perform the bi-linear interpolation
         for (int i = 1; i < 5; i++) {
             if (fiberLocz <= dataTempe[i + 30]) {
@@ -1273,7 +1320,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                 }
             }
         }
-    }
+    }*/
 }
     
 double
