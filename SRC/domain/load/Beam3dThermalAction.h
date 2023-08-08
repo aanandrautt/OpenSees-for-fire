@@ -79,6 +79,10 @@ class Beam3dThermalAction : public ElementalLoad
   Beam3dThermalAction(int tag, TimeSeries* theSeries,
       double locY1, double locY2, double locZ1, double Z2,
       int theElementTag);
+  // Added by Anand Kumar 2023
+  Beam3dThermalAction(int tag, double locY1, double locY2, double locZ1, 
+      TimeSeries* theSeries, double Z2,
+      int theElementTag);
 
   // Added by Mhd Anwar Orabi 2021
   Beam3dThermalAction(bool z_Axis, int tag,

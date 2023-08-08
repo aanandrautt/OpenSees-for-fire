@@ -152,6 +152,9 @@ static int eleArgStart = 0;
 static int nodeLoadTag = 0;
 static int eleLoadTag = 0;
 
+int RcvLoc5;
+int RcvLoc6;
+
 // 
 // THE PROTOTYPES OF THE FUNCTIONS INVOKED BY THE INTERPRETER
 //
@@ -3061,7 +3064,15 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 
 				  double RcvLoc1, RcvLoc2, RcvLoc3, RcvLoc4;
 				  TimeSeries* theSeries;
+				  bool genInterpolation400;
 				  bool genInterpolation;
+				  if (strcmp(argv[count], "-genInterpolation400") == 0) {
+					  genInterpolation400 = true;
+					  count++;
+				  }
+				  else {
+					  genInterpolation400 = false;
+				  }
 				  if (strcmp(argv[count], "-genInterpolation") == 0) {
 					  genInterpolation = true;
 					  count++;
@@ -3070,7 +3081,7 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 					  genInterpolation = false;
 				  }
 				  if (argc - count == 4) {
-					  if (genInterpolation) {
+					  if (genInterpolation400) {
 						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], 400);
 					  }
 					  else {
@@ -3098,7 +3109,7 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 					  //end for recieving input
 					  for (int i = 0; i<theEleTags.Size(); i++) {
 						  // Modified by Mhd Anwar Orabi 2021
-						  if (genInterpolation) {
+						  if (genInterpolation400) {
 							  theLoad = new Beam3dThermalAction(eleLoadTag, theSeries, RcvLoc1, RcvLoc2, RcvLoc3, RcvLoc4,
 								  theEleTags(i));
 						  } else if (!zAxis) {
@@ -3129,6 +3140,77 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 					  return 0;
 
 				  }
+
+				  if (argc - count == 6) {
+					  if (genInterpolation) {
+						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], 400);
+					  }
+					  else {
+						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 1], 15);
+					  }
+					  using2Ddata = false;
+
+					  if (Tcl_GetDouble(interp, argv[count], &RcvLoc1) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+					  if (Tcl_GetDouble(interp, argv[count + 1], &RcvLoc2) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 1] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+					  if (Tcl_GetDouble(interp, argv[count + 2], &RcvLoc3) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 2] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+					  if (Tcl_GetDouble(interp, argv[count + 3], &RcvLoc4) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 3] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+					  if (Tcl_GetInt(interp, argv[count + 4], &RcvLoc5) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 4] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+					  if (Tcl_GetInt(interp, argv[count + 5], &RcvLoc6) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 5] << " for -beamThermal\n";
+						  return TCL_ERROR;
+					  }
+
+					  //end for recieving input
+					  for (int i = 0; i < theEleTags.Size(); i++) {
+						  // Modified by Mhd Anwar Orabi 2021
+						  if (genInterpolation) {
+							  theLoad = new Beam3dThermalAction(eleLoadTag, RcvLoc1, RcvLoc2, RcvLoc3, theSeries, RcvLoc4,
+								  theEleTags(i));
+						  }
+						  else if (!zAxis) {
+							  theLoad = new Beam3dThermalAction(eleLoadTag, RcvLoc1, RcvLoc2, RcvLoc3, RcvLoc4,
+								  theSeries, theEleTags(i));
+						  }
+						  else {
+							  theLoad = new Beam3dThermalAction(zAxis, eleLoadTag, RcvLoc1, RcvLoc2, RcvLoc3, RcvLoc4,
+								  theSeries, theEleTags(i));
+						  }
+						  if (theLoad == 0) {
+							  opserr << "WARNING eleLoad - out of memory creating load of type " << argv[count];
+							  return TCL_ERROR;
+						  }
+
+						  // get the current pattern tag if no tag given in i/p
+						  int loadPatternTag = theTclLoadPattern->getTag();
+
+						  // add the load to the domain
+						  if (theTclDomain->addElementalLoad(theLoad, loadPatternTag) == false) {
+							  opserr << "WARNING eleLoad - could not add following load to domain:\n ";
+							  opserr << theLoad;
+							  delete theLoad;
+							  return TCL_ERROR;
+						  }
+						  eleLoadTag++;
+					  }
+					  return 0;
+
+				  }
+
 				  //end of defining 15 data points with external file
 				  else if (argc - count == 2 || argc - count == 9) {
 					  // for receiving data which has the similiar structure as 2D beam section

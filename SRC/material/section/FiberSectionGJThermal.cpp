@@ -42,6 +42,10 @@
 #include <MaterialResponse.h>
 #include <UniaxialMaterial.h>
 #include <math.h>
+#include<TclModelBuilder.h>
+
+extern int RcvLoc5;
+extern int RcvLoc6;
 
 ID FiberSectionGJThermal::code(4);
 Vector FiberSectionGJThermal::s(4);
@@ -1229,7 +1233,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             return FiberTemperature;
         }
     }
-    // modified by Anand Kumar (anandk.iitj@gmail.com) [2023] in view of rectangular RC section; 400 temperature points are defined
+
     else if (DataMixed.Size() == 440) {
         //---------------if temperature Data has 35 elements--------------------
 
@@ -1273,6 +1277,59 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                 }
             }
         }
+    }
+
+    // modified by Anand Kumar (anandk.iitj@gmail.com) [2023] in view of rectangular RC section; 400 temperature points are defined
+    else if (DataMixed.Size() == ((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2)) {
+        //---------------if temperature Data has 35 elements--------------------
+        double* dataTempe = new double[((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2)]; //
+        for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2); i++) { //
+            dataTempe[i] = DataMixed(i);
+            opserr << "dataTempe value : " << i << ":=" << dataTempe[i] << endln;
+        }
+
+        if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[RcvLoc5]) <= 1e-10 && fabs(dataTempe[339]) <= 1e-10 && fabs(dataTempe[380]) <= 1e-10 && fabs(dataTempe[190]) <= 1e-10) //no tempe load
+        {
+            return 0;
+        }
+        // Added by Mhd Anwar Orabi 2021
+        //Check if we are out of bounds anywhere
+        if (fiberLocy < dataTempe[(RcvLoc5 + 1) * (RcvLoc6 + 1)])
+        {
+            opserr << "WARNING: Fiber location locy: " << fiberLocy << " below minimum Y " << dataTempe[400] << " of the defined thermal load area." << endln;
+        }
+        else if (fiberLocy > dataTempe[419]) {
+            opserr << "WARNING: Fiber location locy: " << fiberLocy << " above maximum Y " << dataTempe[419] << " of the defined thermal load area." << endln;
+
+        }
+        else if (fiberLocz < dataTempe[420]) {
+            opserr << "WARNING: Fiber location locz: " << fiberLocz << " below minimum Z " << dataTempe[420] << " of the defined thermal load area." << endln;
+        }
+        else if (fiberLocz > dataTempe[439]) {
+            opserr << "WARNING: Fiber location locz: " << fiberLocz << " above maximum Z " << dataTempe[439] << " of the defined thermal load area." << endln;
+        }
+        // perform the bi-linear interpolation
+        for (int i = 1; i < (RcvLoc6 + 1); i++) {
+            opserr << "first i value : " << i << endln;
+            if (fiberLocz <= dataTempe[(i + ((RcvLoc5 + 1) * (RcvLoc6 + 1) + 1))]) {
+                opserr << "first fiberLocz : " << fiberLocz << endln;
+                for (int j = 1; j < RcvLoc5 + 1; j++) {
+                    opserr << "first j value : " << j << endln;
+                    if (fiberLocy <= dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)]) {
+                        // interpolate across Z = Zi-1:
+                        double Tzi_1 = dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2] + (fiberLocy - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]) * (dataTempe[i + (RcvLoc5 + 1) * j - 1] - dataTempe[i + (RcvLoc5+1) * j - RcvLoc5 - 2]) / (dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)] - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]);
+                        // interpolate across Z = Zi:
+                        opserr << "WARNING: Tzi: " << Tzi_1 << endln;
+                        opserr << "WARNING: dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2]: " << dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2] << endln;
+                        double Tzi = dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 1] + (fiberLocy - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]) * (dataTempe[i + (RcvLoc5 + 1) * j] - dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 1]) / (dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)] - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]);
+                        // interpolate across Y = fiberLocy:
+                        opserr << "WARNING: Tzi: " << Tzi <<  endln;
+                        return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 +1] - dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5]);
+                    }
+                }
+            }
+        }
+        delete[] dataTempe;
     }
 
     
