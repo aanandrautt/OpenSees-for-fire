@@ -152,8 +152,9 @@ static int eleArgStart = 0;
 static int nodeLoadTag = 0;
 static int eleLoadTag = 0;
 
-int RcvLoc5;
-int RcvLoc6;
+//Added by Anand Kumar 2023
+int NumFib_y;
+int NumFib_z;
 
 // 
 // THE PROTOTYPES OF THE FUNCTIONS INVOKED BY THE INTERPRETER
@@ -3140,14 +3141,9 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 					  return 0;
 
 				  }
-
+				  // added by Anand Kumar [2023] 
 				  if (argc - count == 6) {
-					  if (genInterpolation) {
-						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], 400);
-					  }
-					  else {
-						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 1], 15);
-					  }
+					  
 					  using2Ddata = false;
 
 					  if (Tcl_GetDouble(interp, argv[count], &RcvLoc1) != TCL_OK) {
@@ -3166,18 +3162,25 @@ TclCommand_addElementalLoad(ClientData clientData, Tcl_Interp *interp, int argc,
 						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 3] << " for -beamThermal\n";
 						  return TCL_ERROR;
 					  }
-					  if (Tcl_GetInt(interp, argv[count + 4], &RcvLoc5) != TCL_OK) {
-						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 4] << " for -beamThermal\n";
+					  if (Tcl_GetInt(interp, argv[count + 4], &NumFib_y) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid number of fibers  " << argv[count + 4] << " for -beamThermal\n";
 						  return TCL_ERROR;
 					  }
-					  if (Tcl_GetInt(interp, argv[count + 5], &RcvLoc6) != TCL_OK) {
-						  opserr << "WARNING eleLoad - invalid single loc  " << argv[count + 5] << " for -beamThermal\n";
+					  if (Tcl_GetInt(interp, argv[count + 5], &NumFib_z) != TCL_OK) {
+						  opserr << "WARNING eleLoad - invalid numbers of fiber  " << argv[count + 5] << " for -beamThermal\n";
 						  return TCL_ERROR;
+					  }
+
+					  if (genInterpolation) {
+						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 2], ((NumFib_y+1)*(NumFib_z+1)));
+					  }
+					  else {
+						  theSeries = new PathTimeSeriesThermal(eleLoadTag, argv[count - 1], 15);
 					  }
 
 					  //end for recieving input
 					  for (int i = 0; i < theEleTags.Size(); i++) {
-						  // Modified by Mhd Anwar Orabi 2021
+						  // Modified by Anand Kumar 2023
 						  if (genInterpolation) {
 							  theLoad = new Beam3dThermalAction(eleLoadTag, RcvLoc1, RcvLoc2, RcvLoc3, theSeries, RcvLoc4,
 								  theEleTags(i));

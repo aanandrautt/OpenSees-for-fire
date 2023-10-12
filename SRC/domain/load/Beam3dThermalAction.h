@@ -114,9 +114,9 @@ class Beam3dThermalAction : public ElementalLoad
  protected:
   
  private:
-  double Temp[400]; //Initial Temperature for using plain patterns
-  double TempApp[400]; // Temperature applied
-  double Loc[40]; // 5 Locsthrough the depth of section+ 5 locs through the width
+  double Temp[4000]; //Initial Temperature for using plain patterns      **increased to consider large number of temperature points [Anand Kumar 2023]
+  double TempApp[4000]; // Temperature applied              **increased to consider large number of temperature points [Anand Kumar 2023]
+  double Loc[400]; //  Locsthrough the depth of section+  locs through the width **increased to consider large number of temperature points [Anand Kumar 2023]
   static Vector data; // data for temperature and locations
 
   

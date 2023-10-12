@@ -42,8 +42,9 @@
 #include <TclModelBuilder.h>
 
 Vector Beam3dThermalAction::data(25);
-extern int RcvLoc5;
-extern int RcvLoc6;
+// added by Anand Kumar 2023
+extern int NumFib_y;
+extern int NumFib_z;
 
 //Basically there are 5 datapoints respectively in the top flange , the web , and the bottom flange . 
 // And 5 loc data for defining the zones along y direction, and another 5 for z direction.
@@ -161,16 +162,16 @@ Beam3dThermalAction::Beam3dThermalAction(int tag,
 	:ElementalLoad(tag, LOAD_TAG_Beam3dThermalAction, theElementTag), theSeries(theSeries),
 	ThermalActionType(LOAD_TAG_Beam3dThermalAction)
 {
-	Loc[0] = locY1; Loc[RcvLoc5] = locY2; Loc[RcvLoc5+1] = locZ1; Loc[RcvLoc5 + RcvLoc6 +1] = locZ2;
+	Loc[0] = locY1; Loc[NumFib_y] = locY2; Loc[NumFib_y+1] = locZ1; Loc[NumFib_y + NumFib_z +1] = locZ2;
 
-	for (int i = 1; i < RcvLoc5; i++) {
-		Loc[i] = Loc[0] + i * (Loc[RcvLoc5] - Loc[0]) / RcvLoc5;    //locs through Y
+	for (int i = 1; i < NumFib_y; i++) {
+		Loc[i] = Loc[0] + i * (Loc[NumFib_y] - Loc[0]) / NumFib_y;    //locs through Y
 	}
-	for (int j = 1; j < RcvLoc6; j++) {
-		Loc[RcvLoc5 + 1 + j] = Loc[RcvLoc5 + 1] + j * (Loc[RcvLoc5 + RcvLoc6 + 1] - Loc[RcvLoc5 + 1]) / RcvLoc6;  //locs through Z
+	for (int j = 1; j < NumFib_z; j++) {
+		Loc[NumFib_y + 1 + j] = Loc[NumFib_y + 1] + j * (Loc[NumFib_y + NumFib_z + 1] - Loc[NumFib_y + 1]) / NumFib_z;  //locs through Z
 	}
 	Factors.Zero();
-	for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1)); i++) {
+	for (int i = 0; i < ((NumFib_y + 1) * (NumFib_z + 1)); i++) {
 		Temp[i] = 0;   //Here the original temp is set as 1, which will be factorized by the value obtained from 
 		TempApp[i] = 0;
 	}
@@ -290,15 +291,15 @@ Beam3dThermalAction::getData(int &type, double loadFactor)
 		 data(i+400) = Loc[i]; //5 locs through Y and then 5 through Z
 	 }
  }
-
+ // Added by Anand Kumar 2023
  else if (indicator == 16) {
-	 data.resize((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2);
-	 for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1)); i++) {
-		 data(i) = TempApp[i];            //25 temps across the y-z cross section
+	 data.resize((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2);
+	 for (int i = 0; i < ((NumFib_y + 1) * (NumFib_z + 1)); i++) {
+		 data(i) = TempApp[i];            // temps across the y-z cross section
 	 }
-	 for (int i = 0; i < (RcvLoc5 + RcvLoc6 + 2); i++)
+	 for (int i = 0; i < (NumFib_y + NumFib_z + 2); i++)
 	 {
-		 data((i+ (RcvLoc5 + 1) * (RcvLoc6 + 1))) = Loc[i]; //5 locs through Y and then 5 through Z
+		 data((i+ (NumFib_y + 1) * (NumFib_z + 1))) = Loc[i]; //5 locs through Y and then 5 through Z
 	 }
  }
  else{
@@ -337,8 +338,9 @@ Beam3dThermalAction::applyLoad(const Vector &factors)
 			TempApp[i] = Temp[i] * factors(i);
 		}
 	}
+	// Added by Anand Kumar 2023
 	else if (indicator == 16) {
-		for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1)); i++) {
+		for (int i = 0; i < ((NumFib_y + 1) * (NumFib_z + 1)); i++) {
 			TempApp[i] = Temp[i] * factors(i);
 		}
 	}
@@ -390,13 +392,13 @@ Beam3dThermalAction::applyLoad(double loadfactor)
 			TempApp[i] = Factors(i);
 		}
 	}
+	// Added by Anand Kumar 2023
 	else if (indicator == 16) {
 		//Looking for loadfactors from timeseries;
 		Factors = ((PathTimeSeriesThermal*)theSeries)->getFactors(loadfactor);
-		for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1)); i++) {
+		for (int i = 0; i < ((NumFib_y + 1) * (NumFib_z + 1)); i++) {
 			//PathTimeSeriesThermal returns absolute temperature;
   			TempApp[i] = Factors(i);
-			opserr << "print tempApp  " << i <<"=:" << Factors(i) << "\n";
 		}
 	}
 

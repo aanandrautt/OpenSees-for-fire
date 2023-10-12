@@ -44,8 +44,9 @@
 #include <math.h>
 #include<TclModelBuilder.h>
 
-extern int RcvLoc5;
-extern int RcvLoc6;
+// Added by Anand Kumar 2023
+extern int NumFib_y;
+extern int NumFib_z;
 
 ID FiberSectionGJThermal::code(4);
 Vector FiberSectionGJThermal::s(4);
@@ -1234,10 +1235,11 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         }
     }
 
-    else if (DataMixed.Size() == 440) {
-        //---------------if temperature Data has 35 elements--------------------
+    //modified by Anand Kumar (anandk.iitj@gmail.com) [2023] in view of rectangular RC section; 400 temperature points are defined
 
-        double dataTempe[440]; //
+    else if (DataMixed.Size() == 440) {
+        //---------------if temperature Data has 440 elements--------------------
+        double dataTempe[440];
         for (int i = 0; i < 440; i++) { //
             dataTempe[i] = DataMixed(i);
         }
@@ -1245,8 +1247,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[19]) <= 1e-10 && fabs(dataTempe[399]) <= 1e-10 && fabs(dataTempe[380]) <= 1e-10 && fabs(dataTempe[190]) <= 1e-10) //no tempe load
         {
             return 0;
-        }
-        // Added by Mhd Anwar Orabi 2021
+        }       
         //Check if we are out of bounds anywhere
         if (fiberLocy < dataTempe[400])
         {
@@ -1275,26 +1276,25 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                         return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + 420 - 1]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + 420] - dataTempe[i + 420 - 1]);
                     }
                 }
-            }
-        }
+            }           
+        }       
     }
-
-    // modified by Anand Kumar (anandk.iitj@gmail.com) [2023] in view of rectangular RC section; 400 temperature points are defined
-    else if (DataMixed.Size() == ((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2)) {
-        //---------------if temperature Data has 35 elements--------------------
-        double* dataTempe = new double[((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2)]; //
-        for (int i = 0; i < ((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2); i++) { //
+    
+    // added by Anand Kumar 2023
+    else if (DataMixed.Size() == ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2)) {
+        //---------------if temperature Data has (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2) elements--------------------
+        //double* dataTempe = new double[((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2)]; //
+        double dataTempe[2000]; // size increased to 2000
+        for (int i = 0; i < ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2); i++) { //
             dataTempe[i] = DataMixed(i);
-            opserr << "dataTempe value : " << i << ":=" << dataTempe[i] << endln;
         }
 
-        if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[RcvLoc5]) <= 1e-10 && fabs(dataTempe[339]) <= 1e-10 && fabs(dataTempe[380]) <= 1e-10 && fabs(dataTempe[190]) <= 1e-10) //no tempe load
+        /*if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[NumFib_z]) <= 1e-10 && fabs(dataTempe[(NumFib_y + 1) * (NumFib_z + 1) - 1]) <= 1e-10 && fabs(dataTempe[(NumFib_y + 1) * (NumFib_z + 1) - NumFib_z]) <= 1e-10 ) //no tempe load
         {
             return 0;
-        }
-        // Added by Mhd Anwar Orabi 2021
+        }*/      
         //Check if we are out of bounds anywhere
-        if (fiberLocy < dataTempe[(RcvLoc5 + 1) * (RcvLoc6 + 1)])
+        /*if (fiberLocy < dataTempe[(NumFib_y + 1) * (NumFib_z + 1)])
         {
             opserr << "WARNING: Fiber location locy: " << fiberLocy << " below minimum Y " << dataTempe[400] << " of the defined thermal load area." << endln;
         }
@@ -1307,33 +1307,27 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         }
         else if (fiberLocz > dataTempe[439]) {
             opserr << "WARNING: Fiber location locz: " << fiberLocz << " above maximum Z " << dataTempe[439] << " of the defined thermal load area." << endln;
-        }
+        }*/
         // perform the bi-linear interpolation
-        for (int i = 1; i < (RcvLoc6 + 1); i++) {
-            opserr << "first i value : " << i << endln;
-            if (fiberLocz <= dataTempe[(i + ((RcvLoc5 + 1) * (RcvLoc6 + 1) + 1))]) {
-                opserr << "first fiberLocz : " << fiberLocz << endln;
-                for (int j = 1; j < RcvLoc5 + 1; j++) {
-                    opserr << "first j value : " << j << endln;
-                    if (fiberLocy <= dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)]) {
+        for (int i = 1; i < (NumFib_z + 1); i++) {
+            if (fiberLocz <= dataTempe[(i + ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + 1))]) {
+                for (int j = 1; j < NumFib_y + 1; j++) {                    
+                    if (fiberLocy <= dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)]) {
                         // interpolate across Z = Zi-1:
-                        double Tzi_1 = dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2] + (fiberLocy - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]) * (dataTempe[i + (RcvLoc5 + 1) * j - 1] - dataTempe[i + (RcvLoc5+1) * j - RcvLoc5 - 2]) / (dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)] - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]);
-                        // interpolate across Z = Zi:
-                        opserr << "WARNING: Tzi: " << Tzi_1 << endln;
-                        opserr << "WARNING: dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2]: " << dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 2] << endln;
-                        double Tzi = dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 1] + (fiberLocy - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]) * (dataTempe[i + (RcvLoc5 + 1) * j] - dataTempe[i + (RcvLoc5 + 1) * j - RcvLoc5 - 1]) / (dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1)] - dataTempe[j + (RcvLoc5 + 1) * (RcvLoc6 + 1) - 1]);
-                        // interpolate across Y = fiberLocy:
-                        opserr << "WARNING: Tzi: " << Tzi <<  endln;
-                        return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 +1] - dataTempe[i + (RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5]);
+                        double Tzi_1 = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 2] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j - 1] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 2]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
+                        // interpolate across Z = Zi:                                              
+                        double Tzi = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
+                        // interpolate across Y = fiberLocy:                        
+                        return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y +1] - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]);
                     }
                 }
             }
         }
-        delete[] dataTempe;
+        //delete[] dataTempe;
     }
 
     
-   /* else if (DataMixed.Size() == 35) {
+   /*else if (DataMixed.Size() == 35) {
         //---------------if temperature Data has 35 elements--------------------
 
         double dataTempe[35]; //
@@ -1341,7 +1335,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             dataTempe[i] = DataMixed(i);
         }
 
-        /*if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[4]) <= 1e-10 && fabs(dataTempe[24]) <= 1e-10 && fabs(dataTempe[20]) <= 1e-10 && fabs(dataTempe[12]) <= 1e-10) //no tempe load
+        if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[4]) <= 1e-10 && fabs(dataTempe[24]) <= 1e-10 && fabs(dataTempe[20]) <= 1e-10 && fabs(dataTempe[12]) <= 1e-10) //no tempe load
         {
             return 0;
         }

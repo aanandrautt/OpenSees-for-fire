@@ -59,8 +59,9 @@ Matrix DispBeamColumn3dThermal::K(12,12);
 Vector DispBeamColumn3dThermal::P(12);
 double DispBeamColumn3dThermal::workArea[200];
 
-extern int RcvLoc5;
-extern int RcvLoc6;
+// Added by Anand Kumar 2023
+extern int NumFib_y;
+extern int NumFib_z;
 
 void* OPS_DispBeamColumn3dThermal()
 {
@@ -864,8 +865,8 @@ else if (type == LOAD_TAG_Beam3dThermalAction) {
 		  dataMixV = new Vector(25);
       else if (data.Size() == 440)
           dataMixV = new Vector(440);
-      else if (data.Size() == ((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2))
-          dataMixV = new Vector((RcvLoc5 + 1) * (RcvLoc6 + 1) + RcvLoc5 + RcvLoc6 + 2);
+      else if (data.Size() == ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2))  // Added by Anand Kumar 2023
+          dataMixV = new Vector((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2);
 
       *dataMixV=data;
 
