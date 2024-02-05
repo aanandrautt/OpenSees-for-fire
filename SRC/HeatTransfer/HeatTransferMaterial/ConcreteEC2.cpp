@@ -60,7 +60,7 @@ ConcreteEC2::setTrialTemperature(double temp, int par)
 }
 
 
-const Matrix& 
+/*const Matrix&
 ConcreteEC2::getConductivity(void)
 {
   //lower limit
@@ -104,8 +104,53 @@ ConcreteEC2::getConductivity(void)
   }
 	}
     return *k;
-}
+}*/
 
+const Matrix&
+ConcreteEC2::getConductivity(void)
+{
+	//lower limit
+	if (IsLower) {
+		if (trial_temp <= 20.0) {
+			(*k)(0, 0) = 1.333028;
+			(*k)(1, 1) = 1.333028;
+			(*k)(2, 2) = 1.333028;
+		}
+		else if ((20.0 < trial_temp) && (trial_temp < 1200.0)) {
+			double c = trial_temp / 100.0;
+			double kc = 1.36 - 0.136 * c + 0.0057 * c * c;
+			(*k)(0, 0) = kc;
+			(*k)(1, 1) = kc;
+			(*k)(2, 2) = kc;
+		}
+		else {
+			(*k)(0, 0) = 0.5488;
+			(*k)(1, 1) = 0.5488;
+			(*k)(2, 2) = 0.5488;
+		}
+	}
+	else {
+		//upper limit
+		if (trial_temp <= 20.0) {
+			(*k)(0, 0) = 1.333028;
+			(*k)(1, 1) = 1.333028;
+			(*k)(2, 2) = 1.333028;
+		}
+		else if ((20.0 < trial_temp) && (trial_temp < 1200.0)) {
+			double c = trial_temp / 100.0;
+			double kc = 1.36 - 0.136 * c + 0.0057 * c * c;
+			(*k)(0, 0) = kc;
+			(*k)(1, 1) = kc;
+			(*k)(2, 2) = kc;
+		}
+		else {
+			(*k)(0, 0) = 0.5488;
+			(*k)(1, 1) = 0.5488;
+			(*k)(2, 2) = 0.5488;
+		}
+	}
+	return *k;
+}
 
 double  
 ConcreteEC2::getRho(void)

@@ -87,7 +87,7 @@ Concrete02Thermal::Concrete02Thermal(int tag, double _fc, double _epsc0, double 
 
   cooling=0; //PK add
   TempP = 0.0; //Pk add previous temp
-
+  epsLitsp = 0.0; // AK add transient strain
 }
 
 Concrete02Thermal::Concrete02Thermal(void):
@@ -124,7 +124,7 @@ Concrete02Thermal::setTrialStrain(double trialStrain, double FiberTemperature, d
   double 	ec0 = fc * 2. / epsc0;//?
   // double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
   
-  // retrieve concrete hitory variables
+  // retrieve concrete history variables
   
   ecmin = ecminP;
   dept = deptP;
@@ -252,6 +252,10 @@ Concrete02Thermal::getElongTangent(double TempT, double& ET, double& Elong, doub
   // The datas are from EN 1992 part 1-2-1 
   // Tensile strength at elevated temperature
 	
+// AK add for trainsient strain
+  bool Lits = true;
+  double Eps_lits = 0.0;
+
    //if (Temp >= 1080) {
   //	  opserr << "temperature " << " " << Temp <<endln;
   //}
@@ -354,7 +358,7 @@ Concrete02Thermal::getElongTangent(double TempT, double& ET, double& Elong, doub
 	 // epsc0 = epsc0T*strainRatio;
 	 // epscu = epscuT*strainRatio;
 
-  // caculation of thermal elongation
+  // caculation of thermal elongation for siliceous concrete material
 	  if (Temp <= 1) {
 		  ThermalElongation = (Temp - 0) * 9.213e-6;
 	  }
@@ -368,14 +372,26 @@ Concrete02Thermal::getElongTangent(double TempT, double& ET, double& Elong, doub
 	  opserr << "the temperature is invalid\n";
   }
 
+   // AK add transient starin 
+  if (Lits) {
+      if (sigP < 0) {
+              //double Sig_factor = -(sigCommit(0) + sigCommit(1)) / 2 / fc0 / 1.562491022;
+              Eps_lits = -(4.12e-5 * Temp - 1.72e-7 * Temp * Temp + 3.3e-10 * Temp * Temp * Temp) * sigP;
+              if (Eps_lits > epsLitsp)
+                  epsLitsp = Eps_lits;
+      }
+      if (epsLitsp > 0)
+          ThermalElongation = ThermalElongation - epsLitsp;
+      }
+
   ET = 1.5*fc/epsc0; 
   Elong = ThermalElongation;
 
   //For cooling to exist T must go to Tmax and then decrease
 //if cooling the factor becomes 1 
- //if (Temp = Tempmax) {
-    //cooling=1;
- // } 
+ if (Temp = Tempmax) {
+    cooling=1;
+ }
 
 ///PK COOLING PART FOR DESCENDING BRANCH OF A FIRE//// 
   // If temperature is less that previous commited temp then we have cooling taking place
@@ -458,7 +474,7 @@ Concrete02Thermal::getElongTangent(double TempT, double& ET, double& Elong, doub
   else  {
     opserr << "the temperature is invalid\n"; 
   }
-  // PK 2nd step is to determine compressice strength at ambient after cooling as shown in ANNEX C (EN1994-1-2:2005)  
+  // PK 2nd step is to determine compressive strength at ambient after cooling as shown in ANNEX C (EN1994-1-2:2005)  
   if (Tempmax < 0) {
     opserr << "max temperature cannot be less than zero " << " " << Tempmax <<endln;
   }

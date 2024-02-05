@@ -210,8 +210,11 @@
 #define MAT_TAG_SteelECThermal			93   //L.Jiang [SIF]
 #define MAT_TAG_StainlessECThermal              94   //L.Jiang [SIF]
 #define MAT_TAG_ConcreteECThermal		95   //L.Jiang [SIF]
-#define MAT_TAG_BoucWenOriginal                 96
-#define MAT_TAG_DamperMaterial                  97
+#define MAT_TAG_ConcreteECTThermal		96   //Anand Kumar IITJ
+#define MAT_TAG_SteelDPM		97   //Anand Kumar IITJ 
+#define MAT_TAG_SteelDPM1		98   //Anand Kumar IITJ 
+#define MAT_TAG_BoucWenOriginal                 99
+#define MAT_TAG_DamperMaterial                  100
 
 #define MAT_TAG_PySimple1                    205
 #define MAT_TAG_TzSimple1                    206

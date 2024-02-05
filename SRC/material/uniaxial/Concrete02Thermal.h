@@ -93,6 +93,8 @@ class Concrete02Thermal : public UniaxialMaterial
     double e;     
     double eps;   
 
+    double epsLitsp; // AK add for transient strain
+
 
 };
 

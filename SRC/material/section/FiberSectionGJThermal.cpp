@@ -460,7 +460,7 @@ FiberSectionGJThermal::getTemperatureStress(const Vector& DataMixed)
 	double yi = matData[jy];
 	double zi = matData[jz];
 	double FiberTemperature = 0 ; 
-	double FiberTempMax = 0;
+	double FiberTempMax = 0.0;
 
 	FiberTemperature= this->determineFiberTemperature( dataMixed, -yi, zi);
     // determine material strain and set it
@@ -1319,6 +1319,9 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                         double Tzi = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
                         // interpolate across Y = fiberLocy:                        
                         return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y +1] - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]);
+                        //if (FiberTemperature1 < FiberTemperature) {
+                            //FiberTemperatureMax = FiberTemperature;
+                        }
                     }
                 }
             }
@@ -1372,7 +1375,6 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             }
         }
     }*/
-}
     
 double
 FiberSectionGJThermal::LinearlyInterpolate(double xi, double yi, double xf, double yf, double x) {

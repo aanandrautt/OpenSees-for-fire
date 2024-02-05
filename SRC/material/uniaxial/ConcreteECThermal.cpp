@@ -114,7 +114,7 @@ ConcreteECThermal::ConcreteECThermal(int tag, double _fc, double _epsc0, double 
 
   cooling=0; //PK add
   TempP = 0.0; //Pk add previous temp
-
+  epsLitsp = 0.0; // AK add transient strain
 }
 
 ConcreteECThermal::ConcreteECThermal(void):
@@ -278,6 +278,11 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
   // The datas are from EN 1992 part 1-2-1 
   // Tensile strength at elevated temperature
 	
+
+  // AK add for trainsient strain
+  bool Lits = true;
+  double Eps_lits = 0;
+
    //if (Temp >= 1080) {
   //	  opserr << "temperature " << " " << Temp <<endln;
   //}
@@ -397,14 +402,8 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
   ET = 1.5*fc/epsc0; 
   Elong = ThermalElongation;
 
-
   return 0;
 }
-
-
-
-
-
 
 int 
 ConcreteECThermal::commitState(void)
