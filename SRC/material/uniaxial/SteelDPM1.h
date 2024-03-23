@@ -86,7 +86,7 @@ class SteelDPM1 : public UniaxialMaterial
     
     void yield_funtion(double E0, double afun, double bfun, double cfun, double ep, double fp, double fy, double fu, double ey, double& r, double& G); // Anand Kumar IITJ
     //double yield_funtions(double E0, double afun, double bfun, double cfun, double ep, double fp, double fy, double fu, double ey);
-    void Nr(double sg_trial1, double E, double a, double b, double c, double ep, double fp, double fy, double fu, double ey, double &stress1, double &E_tgt); // Anand Kumar IITJ
+    void Nr(double sg_trial1, double E, double a, double b, double c, double ep, double fp, double fy, double fu, double ey, double alp_p, double &stress1, double &E_tgt, double& eplas1, double& alp1); // Anand Kumar IITJ
 
     //JZ 07/10 /////////////////////////////////////////////////////////////start
     double Temp;  // material temp  
@@ -98,7 +98,9 @@ class SteelDPM1 : public UniaxialMaterial
     double fu; // Added by Anand Kumar IITJ
     double eplasP;
     double eplas;
-    int position;
+    double alpP;
+    double alp;
+    //int position;
 	
 	
     //JZ 07/10 /////////////////////////////////////////////////////////////end 

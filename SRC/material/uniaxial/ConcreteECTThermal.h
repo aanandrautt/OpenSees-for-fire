@@ -86,6 +86,7 @@ class ConcreteECTThermal : public UniaxialMaterial
     double steps;    //the amount of the steps.
     double strainRatio; //input strain over 0.0025(EU 1992)  
     double ThermalElongation; // eps(theata) = alpha * temperature
+    double ThermalElong;
     double fcT;    
     double epsc0T; 
     double fcuT;   

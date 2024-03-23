@@ -1319,8 +1319,6 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                         double Tzi = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
                         // interpolate across Y = fiberLocy:                        
                         return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y +1] - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]);
-                        //if (FiberTemperature1 < FiberTemperature) {
-                            //FiberTemperatureMax = FiberTemperature;
                         }
                     }
                 }

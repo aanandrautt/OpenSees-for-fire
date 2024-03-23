@@ -89,56 +89,58 @@ OPS_SteelDPM1()
 
 SteelDPM1::SteelDPM1
 (int tag, double FY, double E, double B,
- double A1, double A2, double A3, double A4):
-   UniaxialMaterial(tag,MAT_TAG_SteelDPM1),
-   fyT(FY), E0T(E), b(B), a1(A1), a2(A2), a3(A3), a4(A4)
+    double A1, double A2, double A3, double A4) :
+    UniaxialMaterial(tag, MAT_TAG_SteelDPM1),
+    fyT(FY), E0T(E), b(B), a1(A1), a2(A2), a3(A3), a4(A4)
 {
-   // Sets all history and state variables to initial values
-   // History variables
-   CminStrain = 0.0;
-   CmaxStrain = 0.0;
-   CshiftP = 1.0;
-   CshiftN = 1.0;
-   Cloading = 0;
-   Ctemperature = 0;   //Added by Liming,2013
-   Cmono = true;    //Added by Liming,2013
+    // Sets all history and state variables to initial values
+    // History variables
+    CminStrain = 0.0;
+    CmaxStrain = 0.0;
+    CshiftP = 1.0;
+    CshiftN = 1.0;
+    Cloading = 0;
+    Ctemperature = 0;    //Added by Liming,2013
+    Cmono = true;    //Added by Liming,2013
 
-   TminStrain = 0.0;
-   TmaxStrain = 0.0;
-   TshiftP = 1.0;
-   TshiftN = 1.0;
-   Tloading = 0;
-   Ttemperature = 0;   //Added by Liming,2013
-   Tmono = true;   //Added by Liming,2013
-   
-   // State variables
-   Cstrain = 0.0;
-   Cstress = 0.0;
-   //Ctangent = E0;
+    TminStrain = 0.0;
+    TmaxStrain = 0.0;
+    TshiftP = 1.0;
+    TshiftN = 1.0;
+    Tloading = 0;
+    Ttemperature = 0;    //Added by Liming,2013
+    Tmono = true;    //Added by Liming,2013
 
-   Ctangent = E0T;///JZ, 07/10//
-   Cmodulus = E0T; //added by Princeton
-   
+    // State variables
+    Cstrain = 0.0;
+    Cstress = 0.0;
+    //Ctangent = E0;
 
-   Tstrain = 0.0;
-   Tstress = 0.0;
-   // Ttangent = E0;
+    Ctangent = E0T;///JZ, 07/10//
+    Cmodulus = E0T; //added by Princeton
 
-   Ttangent = E0T;///JZ, 07/10//
-   Tmodulus = E0T; //added by Princeton
 
-   // AddingSensitivity:BEGIN /////////////////////////////////////
-   parameterID = 0;
-   SHVs = 0;
-   // AddingSensitivity:END //////////////////////////////////////
+    Tstrain = 0.0;
+    Tstress = 0.0;
+    // Ttangent = E0;
 
-   ThermalElongation = 0; //initialize //JZ, 07/10//
-   E0 = E0T;//JZ, 07/10//
-   fy = fyT;//JZ, 07/10//
-   fp = 0;//JZ, 11/10//
-   fu = 0; // Added by Anand Kumar IITJ  
-   eplasP = 0;
-   position = 0;
+    Ttangent = E0T;///JZ, 07/10//
+    Tmodulus = E0T; //added by Princeton
+
+    // AddingSensitivity:BEGIN /////////////////////////////////////
+    parameterID = 0;
+    SHVs = 0;
+    // AddingSensitivity:END //////////////////////////////////////
+
+    ThermalElongation = 0; //initialize //JZ, 07/10//
+    E0 = E0T;//JZ, 07/10//
+    fy = fyT;//JZ, 07/10//
+    fp = 0.0;//JZ, 11/10//
+    fu = 0.0; // Added by Anand Kumar IITJ  
+    eplasP = 0.0; //Added by Anand Kumar IITJ : Previous Plastic Strain  
+    eplas = 0.0;  //Added by Anand Kumar IITJ : Current Plastic Srain
+    alpP = 0.0;   //Added by Anand Kumar IITJ : Previous alpha
+    alp = 0.0;    //Added by Anand Kumar IITJ : Current alpha
 }
 
 SteelDPM1::SteelDPM1():UniaxialMaterial(0,MAT_TAG_SteelDPM1),
@@ -287,59 +289,54 @@ void SteelDPM1::determineTrialState (double dStrain)
 	  Ttangent = E0;
       else
 	  Ttangent = Esh;
-
-
+      
       //Anand Kumar IITJ code starts:
-
       if ((E0 != E0T)) {
-       
-          double e = Tstrain;
-          double epl = Cstrain - Cstress / (Cmodulus);
-          //double epl = 0;
-          //opserr << "epl= \n" << epl;
-          /*if (position == 0) {
-              epl = epll;
-          }
-          else {
-              epl = eplasP;
-          }*/
-
+          double e = Tstrain;     
+          //double epl = Cstrain - Cstress / (Cmodulus);   
           double ep = (fp / E0);
           double ey = 0.02;
           
-          int sign = 0;          
+          int sign = 0;
           if (e < 0) {
               sign = -1;
           }
           else {
               sign = 1;
-          }
-          double e_a = sign * Tstrain;
-          
+          }          
           double cfun = (pow((fy - fp), 2)) / ((ey - ep) * E0 - 2 * (fy - fp));
           double bfun = sqrt(cfun * (ey - ep) * E0 + pow(cfun, 2));
           double afun = sqrt((ey - ep) * (ey - ep + cfun / E0));
-         
-          double sig_trial = E0 * (e_a - epl);
+  
+          double sig_trial = E0 * (e - eplasP);
           double r, G;
-          this->yield_funtion(E0, afun, bfun, cfun, epl, fp, fy, fu, ey, r, G);
-          //opserr << "  "<< "r = \n" << r;
-          if ((sig_trial - r) < 0) {
-              c = sig_trial * sign;
+          this->yield_funtion(E0, afun, bfun, cfun, alpP, fp, fy, fu, ey, r, G);
+          if ((fabs(sig_trial) - r) < 0) {
+              c = sig_trial;
               Ttangent = E0;
+              eplas = eplasP;
+              alp = alpP;
           }
           else {
-              double sig_trial1 = E0 * (e - epl);
+              double sig_trial1 = E0 * (e - eplasP);
               double stress11;
               double E_tgt11;
-              this->Nr(sig_trial1, E0, afun, bfun, cfun, epl, fp, fy, fu, ey, stress11, E_tgt11);
+              double eplas11;
+              double alp11;
+              this->Nr(sig_trial1, E0, afun, bfun, cfun, eplasP, fp, fy, fu, ey, alpP, stress11, E_tgt11, eplas11, alp11);
               c = stress11;
-              Ttangent = E_tgt11;              
+              if (E_tgt11 <= 10.0) {
+                  Ttangent = 10.0;
+              }
+              else {
+                  Ttangent = E_tgt11;
+              }               
+              eplas = eplas11;
+              alp = alp11;
           }
 
-          Tstress = c;
-          Tmodulus = E0;
-          position = 1;         
+          Tstress = c;          
+          Tmodulus = E0;  
       }
       // Anand Kumar IITJ code ends.
   
@@ -405,122 +402,123 @@ SteelDPM1::getElongTangent(double TempT, double &ET, double &Elong, double TempT
 {
   //JZ updated, from rebar to C steel
   
-  // EN 1992 pt 1-2-1. Class N hot rolled  reinforcing steel at elevated temperatures
-  if (TempT <= 80) {
-    fy = fyT;
-    E0 = E0T;
-    
-    //b=TempT*0.00325/80;
-    
-    fp = fyT;
-    fu = 1.25 * fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 180) {
-    fy = fyT;
-    E0 = E0T*(1 - (TempT - 80)*0.1/100);
-    
-    //b=0.00325+(TempT - 80)*0.00325/100;
-    
-    fp = fyT*(1 - (TempT - 80)*(1-0.807)/100);
-    fu = 1.25 * fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 280) {
-    fy = fyT;
-    E0 = E0T*(0.9 - (TempT - 180)*0.1/100);
-    
-    //b=0.0065+(TempT - 180)*0.00325/100;
-    
-    fp = fyT*(0.807 - (TempT - 180)*(0.807-0.613)/100);
-    fu = 1.25 * fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 380) {
-    fy = fyT;
-    E0 = E0T*(0.8 - (TempT - 280)*0.1/100);
-    
-    //b=0.00975+(TempT - 280)*0.00355/100;
-    
-    fp = fyT*(0.613 - (TempT - 280)*(0.613 - 0.42)/100);
-    fu = (2 - 0.0025 * TempT) * fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 480) {
-    fy = fyT*(1 - (TempT - 380)*0.22/100);
-    E0 = E0T*(0.7 - (TempT - 380)*0.1/100);
-    
-    //b=0.0133+(TempT - 380)*0.0133/100;
-    
-    fp = fyT*(0.42 - (TempT - 380)*(0.42 - 0.36)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 580) {
-    fy = fyT*(0.78 - (TempT - 480)*0.31/100);
-    E0 = E0T*(0.6 - (TempT - 480)*0.29/100);
-    
-    //b=0.0266+(TempT - 480)*0.0136/100;
-    
-    fp = fyT*(0.36 - (TempT - 480)*(0.36 - 0.18)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 680) {
-    fy = fyT*(0.47 - (TempT - 580)*0.24/100);
-    E0 = E0T*(0.31 - (TempT - 580)*0.18/100);
-    
-    // b=0.0402-(TempT - 580)*0.0067/100;
-    
-    fp = fyT*(0.18 - (TempT - 580)*(0.18 - 0.075)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 780) {
-    fy = fyT*(0.23 - (TempT - 680)*0.12/100);
-    E0 = E0T*(0.13 - (TempT - 680)*0.04/100);
-    
-    // b=0.0335-(TempT - 680)*0.0067/100;
-    
-    fp = fyT*(0.075 - (TempT - 680)*(0.075 - 0.005)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 880) {
-    fy = fyT*(0.11 - (TempT - 780)*0.05/100);
-    E0 = E0T*(0.09 - (TempT - 780)*0.0225/100);
-    
-    //  b=0.0268-(TempT - 780)*0.0067/100;
-    
-    fp = fyT*(0.05 - (TempT - 780)*(0.05 - 0.0375)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 980) {
-    fy = fyT*(0.06 - (TempT - 880)*0.02/100);
-    E0 = E0T*(0.0675 - (TempT - 880)*(0.0675 - 0.045)/100);
-    
-    //  b=0.0201-(TempT - 880)*0.0067/100;
-    
-    fp = fyT*(0.0375 - (TempT - 880)*(0.0375 - 0.025)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 1080) {
-    fy = fyT*(0.04 - (TempT - 980)*0.02/100);
-    E0 = E0T*(0.045 - (TempT - 980)*(0.045 - 0.0225)/100);
-    
-    // b=0.0134-(TempT - 980)*0.0067/100;
-    
-    fp = fyT*(0.025 - (TempT - 980)*(0.025 - 0.0125)/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else if (TempT <= 1180) {
-    fy = fyT*(0.02 - (TempT - 1080)*0.02/100);
-    E0 = E0T*(0.0225 - (TempT - 1080)*0.0225/100);
-    
-    //  b=0.0067-(TempT - 980)*0.0067/100;
-    
-    fp = fyT*(0.0125 - (TempT - 1080)*0.0125/100);
-    fu = fyT; //Added by Anand Kumar
-  }
-  else  {
-    opserr << "the temperature is invalid\n"; 
-  } 
+  // EN 1992 pt 1-2-1. Class N hot rolled  reinforcing steel at elevated temperatures   
+    if (TempT <= 80) {
+        fy = fyT;
+        E0 = E0T;
+
+        //b=TempT*0.00325/80;
+
+        fp = fyT;
+        fu =  1.25 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 180) {
+        fy = fyT;
+        E0 = E0T * (1 - (TempT - 80) * 0.1 / 100);
+
+        //b=0.00325+(TempT - 80)*0.00325/100;
+
+        fp = fyT * (1 - (TempT - 80) * (1 - 0.807) / 100);
+        fu = 1.25 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 280) {
+        fy = fyT;
+        E0 = E0T * (0.9 - (TempT - 180) * 0.1 / 100);
+
+        //b=0.0065+(TempT - 180)*0.00325/100;
+
+        fp = fyT * (0.807 - (TempT - 180) * (0.807 - 0.613) / 100);
+        fu = 1.25 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 380) {
+        fy = fyT;
+        E0 = E0T * (0.8 - (TempT - 280) * 0.1 / 100);
+
+        //b=0.00975+(TempT - 280)*0.00355/100;
+
+        fp = fyT * (0.613 - (TempT - 280) * (0.613 - 0.42) / 100);
+        fu = (2 - 0.0025 * TempT) * fy; //Added by Anand Kumar
+        //fu = 1.01 * fy;
+    }
+    else if (TempT <= 480) {
+        fy = fyT * (1 - (TempT - 380) * 0.22 / 100);
+        E0 = E0T * (0.7 - (TempT - 380) * 0.1 / 100);
+
+        //b=0.0133+(TempT - 380)*0.0133/100;
+
+        fp = fyT * (0.42 - (TempT - 380) * (0.42 - 0.36) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 580) {
+        fy = fyT * (0.78 - (TempT - 480) * 0.31 / 100);
+        E0 = E0T * (0.6 - (TempT - 480) * 0.29 / 100);
+
+        //b=0.0266+(TempT - 480)*0.0136/100;
+
+        fp = fyT * (0.36 - (TempT - 480) * (0.36 - 0.18) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 680) {
+        fy = fyT * (0.47 - (TempT - 580) * 0.24 / 100);
+        E0 = E0T * (0.31 - (TempT - 580) * 0.18 / 100);
+
+        // b=0.0402-(TempT - 580)*0.0067/100;
+
+        fp = fyT * (0.18 - (TempT - 580) * (0.18 - 0.075) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 780) {
+        fy = fyT * (0.23 - (TempT - 680) * 0.12 / 100);
+        E0 = E0T * (0.13 - (TempT - 680) * 0.04 / 100);
+
+        // b=0.0335-(TempT - 680)*0.0067/100;
+
+        fp = fyT * (0.075 - (TempT - 680) * (0.075 - 0.05) / 100); //Typos was there, 0.05 iscorrected by Princeton
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 880) {
+        fy = fyT * (0.11 - (TempT - 780) * 0.05 / 100);
+        E0 = E0T * (0.09 - (TempT - 780) * 0.0225 / 100);
+
+        //  b=0.0268-(TempT - 780)*0.0067/100;
+
+        fp = fyT * (0.05 - (TempT - 780) * (0.05 - 0.0375) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 980) {
+        fy = fyT * (0.06 - (TempT - 880) * 0.02 / 100);
+        E0 = E0T * (0.0675 - (TempT - 880) * (0.0675 - 0.045) / 100);
+
+        //  b=0.0201-(TempT - 880)*0.0067/100;
+
+        fp = fyT * (0.0375 - (TempT - 880) * (0.0375 - 0.025) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 1080) {
+        fy = fyT * (0.04 - (TempT - 980) * 0.02 / 100);
+        E0 = E0T * (0.045 - (TempT - 980) * (0.045 - 0.0225) / 100);
+
+        // b=0.0134-(TempT - 980)*0.0067/100;
+
+        fp = fyT * (0.025 - (TempT - 980) * (0.025 - 0.0125) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else if (TempT <= 1180) {
+        fy = fyT * (0.02 - (TempT - 1080) * 0.02 / 100);
+        E0 = E0T * (0.0225 - (TempT - 1080) * 0.0225 / 100);
+
+        //  b=0.0067-(TempT - 980)*0.0067/100;
+
+        fp = fyT * (0.0125 - (TempT - 1080) * 0.0125 / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
+    }
+    else {
+        opserr << "the temperature is invalid\n";
+    }
 
   // caculation of thermal elongation of reinforcing steel. JZ
 ///*	
-	if (TempT <= 1) {
+  if (TempT <= 1) {
 		  ThermalElongation = TempT * 1.2164e-5;
 	  }
   else if (TempT <= 730) {
@@ -543,7 +541,6 @@ SteelDPM1::getElongTangent(double TempT, double &ET, double &Elong, double TempT
 
   //opserr << "\getelongation: " << ET << "\ temp:" << TemperautreC <<endln; //PK Check
 
-
   return 0;
 }
 //JZ 07/10 /////////////////////////////////////////////////////////////end 
@@ -564,7 +561,8 @@ int SteelDPM1::commitState ()
    Cstress = Tstress;
    Ctangent = Ttangent;
    Cmodulus = Tmodulus; //added by Anand Kumar IITJ
-   eplasP = eplas;
+   eplasP = eplas; //added by Anand Kumar IITJ
+   alpP = alp; //added by Anand Kumar IITJ
 
    return 0;
 }
@@ -584,7 +582,8 @@ int SteelDPM1::revertToLastCommit ()
    Tstress = Cstress;
    Ttangent = Ctangent;
    Tmodulus = Cmodulus;  //added by Anand Kumar IITJ
-   eplas = eplasP;
+   eplas = eplasP; //added by Anand Kumar IITJ
+   alp = alpP; //added by Anand Kumar IITJ
 
 
    // AddingSensitivity:BEGIN /////////////////////////////////
@@ -767,28 +766,38 @@ void SteelDPM1::Print (OPS_Stream& s, int flag)
 void
 SteelDPM1::yield_funtion(double E2, double a2, double b2, double c2, double epp, double fp2, double fy2, double fu2, double ey2, double &sigy, double &G)
 { 
-    double q = (E2 * E2 * a2*a2 - E2 * E2 * epp * epp + 2 * E2 * E2 * epp * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * epp - 2 * E2 * c2 * ey2 - 2 * E2 * epp * fp2 + 2 * E2 * ey2 * fp2 + b2*b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
+    if (epp <= (0.04 - fu2 / E2)) {
+        double q = (E2 * E2 * a2 * a2 - E2 * E2 * epp * epp + 2 * E2 * E2 * epp * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * epp - 2 * E2 * c2 * ey2 - 2 * E2 * epp * fp2 + 2 * E2 * ey2 * fp2 + b2 * b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
 
-    if (q <= 0) {
-        q = 0.0;
+        if (q <= 0) {
+            q = 0.0;
+        }
+
+        sigy = fp2 + ((E2 * (b2 * b2 * ey2 - b2 * b2 * epp - E2 * a2 * a2 * c2 + E2 * a2 * a2 * fp2 + a2 * b2 * sqrt(q))) / (E2 * E2 * a2 * a2 + b2 * b2) - fp2) * (1 / (1 + exp(1e10 * (epp - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * epp + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e10 * -(epp - 0.02 + fy2 / E2)))) + ((epp - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e10 * -(epp - 0.04 + fu2 / E2))));
+
+        double ep_p = epp + 1e-9;
+
+        double q1 = (E2 * E2 * a2 * a2 - E2 * E2 * ep_p * ep_p + 2 * E2 * E2 * ep_p * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * ep_p - 2 * E2 * c2 * ey2 - 2 * E2 * ep_p * fp2 + 2 * E2 * ey2 * fp2 + b2 * b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
+        if (q1 <= 0) {
+            q1 = 0;
+        }
+
+        double sigy1 = fp2 + ((E2 * (b2 * b2 * ey2 - b2 * b2 * ep_p - E2 * a2 * a2 * c2 + E2 * a2 * a2 * fp2 + a2 * b2 * sqrt(q1))) / (E2 * E2 * a2 * a2 + b2 * b2) - fp2) * (1 / (1 + exp(1e10 * (ep_p - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * ep_p + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e10 * -(ep_p - 0.02 + fy2 / E2)))) + ((ep_p - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e10 * -(ep_p - 0.04 + fu2 / E2))));
+        G = (fabs(sigy1 - sigy) / 1e-9);
     }
-
-    sigy = fp2 + ((E2 * (b2*b2 * ey2 - b2 * b2* epp - E2 * a2*a2 * c2 + E2 * a2*a2 * fp2 + a2 * b2 * sqrt(q))) / (E2 * E2 * a2*a2 + b2*b2) - fp2) * (1 / (1 + exp(1e6 * (epp - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * epp + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e6 * -(epp - 0.02 + fy2 / E2)))) + ((epp - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e6 * -(epp - 0.04 + fu2 / E2))));
-
-    double ep_p = epp + 1e-7;
-
-    double q1 = (E2 * E2 * a2 * a2 - E2 * E2 * ep_p * ep_p + 2 * E2 * E2 * ep_p * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * ep_p - 2 * E2 * c2 * ey2 - 2 * E2 * ep_p * fp2 + 2 * E2 * ey2 * fp2 + b2*b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
-    if (q1 <= 0) {
-        q1 = 0;
+    else {
+        double fu_1 = (1.0 + b) * fy2; // 1+b gives the slope after (0.04, fu)
+        double H_1 = (fu_1 - fy2) / 0.02;
+        sigy = fu2 + H_1 * (epp - 0.04 + fu_1 / E2);
+        double ep_p = epp + 1e-9;
+        double sigy13 = fu2 + H_1 * (ep_p - 0.04 + fu_1 / E2);
+        G = (fabs(sigy13 - sigy) / 1e-9);
     }
-
-    double sigy1 = fp2 + ((E2 * (b2 * b2 * ey2 - b2 * b2 * ep_p - E2 * a2 * a2 * c2 + E2 * a2 * a2 * fp2 + a2 * b2 * sqrt(q))) / (E2 * E2 * a2 * a2 + b2 * b2) - fp2) * (1 / (1 + exp(1e6 * (ep_p - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * ep_p + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e6 * -(ep_p - 0.02 + fy2 / E2)))) + ((ep_p - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e6 * -(ep_p - 0.04 + fu2 / E2))));
-    G = (fabs(sigy1 - sigy) / 1e-7);
 }
 
 ///// added by Anand Kumar IITJ
 void
-SteelDPM1::Nr(double sg_trial1, double E1, double a1, double b1, double c1, double e_p, double fp1, double fy1, double fu1, double ey1, double &stress1, double &E_tgt) 
+SteelDPM1::Nr(double sg_trial1, double E1, double a1, double b1, double c1, double e_p, double fp1, double fy1, double fu1, double ey1, double alp_p, double &stress1, double &E_tgt, double& eplas1, double& alp1)
 {
     int sign = 0;
     if (sg_trial1 < 0) {
@@ -805,35 +814,20 @@ SteelDPM1::Nr(double sg_trial1, double E1, double a1, double b1, double c1, doub
     double G2 = 0.0;
     for (int i = 0; i < 25; i++) {
 
-        this->yield_funtion(E1, a1, b1, c1, (e_p + d_lambda), fp1, fy1, fu1, ey1, r1, G1);
+        this->yield_funtion(E1, a1, b1, c1, (alp_p + d_lambda), fp1, fy1, fu1, ey1, r1, G1);
         double sg_trial = fabs(sg_trial1);
         double rs = sg_trial - E1 * d_lambda - r1;
-
-        if (fabs(r1 - fy1) <= 1e-5) {
-            d_d_lambda = (sg_trial - r1) / E1;
-            d_lambda = d_lambda + d_d_lambda;
+        d_d_lambda = rs / (G1 + E1);
+        d_lambda = d_lambda + d_d_lambda;
+        if (fabs(d_d_lambda) <= 1e-6) {
             break;
-        }
-        else if (fabs(r1 - fu1) <= 1e-5) {
-            d_d_lambda = (sg_trial - r1) / E1;
-            d_lambda = d_lambda + d_d_lambda;
-            break;
-        }
-        else {
-            d_d_lambda = rs / (G1 + E1);
-            d_lambda = d_lambda + d_d_lambda;
-
-            if (fabs(d_d_lambda) <= 1e-5) {
-                break;
-            }
         }
     }
-    
     this->yield_funtion(E1, a1, b1, c1, (e_p + d_lambda), fp1, fy1, fu1, ey1, r2, G2);
     E_tgt = E1 * G2 / (E1 + G2);
-    stress1 = sg_trial1 - E1 * d_lambda * sign ;
-    eplas = e_p + d_lambda;
-    //position = 1;
+    stress1 = sg_trial1 - E1 * d_lambda * sign;
+    eplas1 = e_p + d_lambda * sign;
+    alp1 = alp_p + d_lambda;
 }
 
 // AddingSensitivity:BEGIN ///////////////////////////////////

@@ -194,7 +194,6 @@ int SteelDPM::setTrialStrain(double strain, double FiberTemperature, double stra
 	 // To enable 0 dStrain in the first iteration for new thermal action step
 	 // The material stress may change due to the degraded modulus.---added by Liming, 2013, OCT//
      
-     
    }
 
    return 0;
@@ -555,109 +554,108 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
   //JZ updated, from rebar to C steel
   
   // EN 1992 pt 1-2-1. Class N hot rolled  reinforcing steel at elevated temperatures
-  if (TempT <= 80) {
-    fy = fyT;
-    E0 = E0T;
-    
-    //b=TempT*0.00325/80;
-    
-    fp = fyT;
-  }
-  else if (TempT <= 180) {
-    fy = fyT;
-    E0 = E0T*(1 - (TempT - 80)*0.1/100);
-    
-    //b=0.00325+(TempT - 80)*0.00325/100;
-    
-    fp = fyT*(1 - (TempT - 80)*(1-0.807)/100);
-    
-  }
-  else if (TempT <= 280) {
-    fy = fyT;
-    E0 = E0T*(0.9 - (TempT - 180)*0.1/100);
-    
-    //b=0.0065+(TempT - 180)*0.00325/100;
-    
-    fp = fyT*(0.807 - (TempT - 180)*(0.807-0.613)/100);
-  }
-  else if (TempT <= 380) {
-    fy = fyT;
-    E0 = E0T*(0.8 - (TempT - 280)*0.1/100);
-    
-    //b=0.00975+(TempT - 280)*0.00355/100;
-    
-    fp = fyT*(0.613 - (TempT - 280)*(0.613 - 0.42)/100);
-  }
-  else if (TempT <= 480) {
-    fy = fyT*(1 - (TempT - 380)*0.22/100);
-    E0 = E0T*(0.7 - (TempT - 380)*0.1/100);
-    
-    //b=0.0133+(TempT - 380)*0.0133/100;
-    
-    fp = fyT*(0.42 - (TempT - 380)*(0.42 - 0.36)/100);
-  }
-  else if (TempT <= 580) {
-    fy = fyT*(0.78 - (TempT - 480)*0.31/100);
-    E0 = E0T*(0.6 - (TempT - 480)*0.29/100);
-    
-    //b=0.0266+(TempT - 480)*0.0136/100;
-    
-    fp = fyT*(0.36 - (TempT - 480)*(0.36 - 0.18)/100);
-  }
-  else if (TempT <= 680) {
-    fy = fyT*(0.47 - (TempT - 580)*0.24/100);
-    E0 = E0T*(0.31 - (TempT - 580)*0.18/100);
-    
-    // b=0.0402-(TempT - 580)*0.0067/100;
-    
-    fp = fyT*(0.18 - (TempT - 580)*(0.18 - 0.075)/100);
-  }
-  else if (TempT <= 780) {
-    fy = fyT*(0.23 - (TempT - 680)*0.12/100);
-    E0 = E0T*(0.13 - (TempT - 680)*0.04/100);
-    
-    // b=0.0335-(TempT - 680)*0.0067/100;
-    
-    fp = fyT*(0.075 - (TempT - 680)*(0.075 - 0.005)/100);
-  }
-  else if (TempT <= 880) {
-    fy = fyT*(0.11 - (TempT - 780)*0.05/100);
-    E0 = E0T*(0.09 - (TempT - 780)*0.0225/100);
-    
-    //  b=0.0268-(TempT - 780)*0.0067/100;
-    
-    fp = fyT*(0.05 - (TempT - 780)*(0.05 - 0.0375)/100);
-  }
-  else if (TempT <= 980) {
-    fy = fyT*(0.06 - (TempT - 880)*0.02/100);
-    E0 = E0T*(0.0675 - (TempT - 880)*(0.0675 - 0.045)/100);
-    
-    //  b=0.0201-(TempT - 880)*0.0067/100;
-    
-    fp = fyT*(0.0375 - (TempT - 880)*(0.0375 - 0.025)/100);
-  }
-  else if (TempT <= 1080) {
-    fy = fyT*(0.04 - (TempT - 980)*0.02/100);
-    E0 = E0T*(0.045 - (TempT - 980)*(0.045 - 0.0225)/100);
-    
-    // b=0.0134-(TempT - 980)*0.0067/100;
-    
-    fp = fyT*(0.025 - (TempT - 980)*(0.025 - 0.0125)/100);
-  }
-  else if (TempT <= 1180) {
-    fy = fyT*(0.02 - (TempT - 1080)*0.02/100);
-    E0 = E0T*(0.0225 - (TempT - 1080)*0.0225/100);
-    
-    //  b=0.0067-(TempT - 980)*0.0067/100;
-    
-    fp = fyT*(0.0125 - (TempT - 1080)*0.0125/100);
-  }
-  else  {
-    opserr << "the temperature is invalid\n"; 
-  } 
+    if (TempT <= 80) {
+        fy = fyT;
+        E0 = E0T;
 
-  // caculation of thermal elongation of reinforcing steel. JZ
-///*	
+        //b=TempT*0.00325/80;
+
+        fp = fyT;
+    }
+    else if (TempT <= 180) {
+        fy = fyT;
+        E0 = E0T * (1 - (TempT - 80) * 0.1 / 100);
+
+        //b=0.00325+(TempT - 80)*0.00325/100;
+
+        fp = fyT * (1 - (TempT - 80) * (1 - 0.807) / 100);
+
+    }
+    else if (TempT <= 280) {
+        fy = fyT;
+        E0 = E0T * (0.9 - (TempT - 180) * 0.1 / 100);
+
+        //b=0.0065+(TempT - 180)*0.00325/100;
+
+        fp = fyT * (0.807 - (TempT - 180) * (0.807 - 0.613) / 100);
+    }
+    else if (TempT <= 380) {
+        fy = fyT;
+        E0 = E0T * (0.8 - (TempT - 280) * 0.1 / 100);
+
+        //b=0.00975+(TempT - 280)*0.00355/100;
+
+        fp = fyT * (0.613 - (TempT - 280) * (0.613 - 0.42) / 100);
+    }
+    else if (TempT <= 480) {
+        fy = fyT * (1 - (TempT - 380) * 0.22 / 100);
+        E0 = E0T * (0.7 - (TempT - 380) * 0.1 / 100);
+
+        //b=0.0133+(TempT - 380)*0.0133/100;
+
+        fp = fyT * (0.42 - (TempT - 380) * (0.42 - 0.36) / 100);
+    }
+    else if (TempT <= 580) {
+        fy = fyT * (0.78 - (TempT - 480) * 0.31 / 100);
+        E0 = E0T * (0.6 - (TempT - 480) * 0.29 / 100);
+
+        //b=0.0266+(TempT - 480)*0.0136/100;
+
+        fp = fyT * (0.36 - (TempT - 480) * (0.36 - 0.18) / 100);
+    }
+    else if (TempT <= 680) {
+        fy = fyT * (0.47 - (TempT - 580) * 0.24 / 100);
+        E0 = E0T * (0.31 - (TempT - 580) * 0.18 / 100);
+
+        // b=0.0402-(TempT - 580)*0.0067/100;
+
+        fp = fyT * (0.18 - (TempT - 580) * (0.18 - 0.075) / 100);
+    }
+    else if (TempT <= 780) {
+        fy = fyT * (0.23 - (TempT - 680) * 0.12 / 100);
+        E0 = E0T * (0.13 - (TempT - 680) * 0.04 / 100);
+
+        // b=0.0335-(TempT - 680)*0.0067/100;
+
+        fp = fyT * (0.075 - (TempT - 680) * (0.075 - 0.05) / 100); //Typos was there, 0.05 iscorrected by Princeton
+    }
+    else if (TempT <= 880) {
+        fy = fyT * (0.11 - (TempT - 780) * 0.05 / 100);
+        E0 = E0T * (0.09 - (TempT - 780) * 0.0225 / 100);
+
+        //  b=0.0268-(TempT - 780)*0.0067/100;
+
+        fp = fyT * (0.05 - (TempT - 780) * (0.05 - 0.0375) / 100);
+    }
+    else if (TempT <= 980) {
+        fy = fyT * (0.06 - (TempT - 880) * 0.02 / 100);
+        E0 = E0T * (0.0675 - (TempT - 880) * (0.0675 - 0.045) / 100);
+
+        //  b=0.0201-(TempT - 880)*0.0067/100;
+
+        fp = fyT * (0.0375 - (TempT - 880) * (0.0375 - 0.025) / 100);
+    }
+    else if (TempT <= 1080) {
+        fy = fyT * (0.04 - (TempT - 980) * 0.02 / 100);
+        E0 = E0T * (0.045 - (TempT - 980) * (0.045 - 0.0225) / 100);
+
+        // b=0.0134-(TempT - 980)*0.0067/100;
+
+        fp = fyT * (0.025 - (TempT - 980) * (0.025 - 0.0125) / 100);
+    }
+    else if (TempT <= 1180) {
+        fy = fyT * (0.02 - (TempT - 1080) * 0.02 / 100);
+        E0 = E0T * (0.0225 - (TempT - 1080) * 0.0225 / 100);
+
+        //  b=0.0067-(TempT - 980)*0.0067/100;
+
+        fp = fyT * (0.0125 - (TempT - 1080) * 0.0125 / 100);
+    }
+    else {
+        opserr << "the temperature is invalid\n";
+    }
+
+  // caculation of thermal elongation of reinforcing steel. JZ	
 	if (TempT <= 1) {
 		  ThermalElongation = TempT * 1.2164e-5;
 	  }
@@ -702,7 +700,7 @@ int SteelDPM::commitState ()
    Cstress = Tstress;
    Ctangent = Ttangent;
    Cmodulus = Tmodulus; //added by Princeton
-
+   
    return 0;
 }
 

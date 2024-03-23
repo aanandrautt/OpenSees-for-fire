@@ -297,11 +297,7 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
   double PhiT = 0.0;  // AK add for trainsient strain
   double PhiTP = 0.0; // AK add for trainsient strain
   double DelT = 0.0; // AK add for trainsient strain
-  
-  
-   //if (Temp >= 1080) {
-  //	  opserr << "temperature " << " " << Temp <<endln;
-  //}
+     
   if (Temp <= 80) {
 	  ft = ftT;
   }
@@ -503,7 +499,7 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
   }
   ET = 2*fc/epsc0; 
   Elong = ThermalElongation;
-
+  
   DelT = Temp - TempP;
   if (DelT > 1.0) {
       Tmax = Temp;
@@ -511,10 +507,10 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
  
   ///PK COOLING PART FOR DESCENDING BRANCH OF A FIRE//// 
   /// If temperature is less that previous commited temp then we have cooling taking place
-  if ((Temp - TempP)<-1.0) {
+  if ((Temp - TempP) < -1.0) {
       Tempmax = TmaxP;
       //opserr << "cooling " << Temp << " " << TempP <<" " << TmaxP << endln;
-
+      
       double kappa;
       double fcmax; //compr strength at max temp
       double fcumax; //ultimate compr strength at max temp
@@ -677,8 +673,54 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
 
       ft = 0;
 
+      double eres = 0.0;
+      ThermalElong = 0.0;
+      // caculation of thermal elongation
+      if (Tempmax <= 1) {
+          ThermalElong = (Tempmax - 0) * 9.213e-6;
+      }
+      else if (Tempmax <= 680) {
+          ThermalElong = -1.8e-4 + 9e-6 * (Tempmax + 20) + 2.3e-11 * (Tempmax + 20) * (Tempmax + 20) * (Tempmax + 20);
+      }
+      else if (Tempmax <= 1180) {
+          ThermalElong = 14e-3;
+      }
+      else {
+          opserr << "the temperature is invalid\n";
+      }
+
       // Make thermal elongation zero during the cooling phase
-     // Elong =0;
+      
+      if (Tempmax < 0) {
+          opserr << "max temperature cannot be less than zero " << " " << Tempmax << endln;
+      }
+      else if (Tempmax <= 280) {
+          //eres = (-0.00058 / 280) * Tempmax;
+          eres = 0;       
+      }
+      else if (Tempmax <= 380) {
+          //eres = -0.00058 + ((- 0.00029 + 0.00058) / 100)* (Tempmax - 280);
+          eres = 0;        
+      }
+      else if (Tempmax <= 580) {
+         // eres = -0.00029 + ((0.00171 + 0.00029) / 200) * (Tempmax - 380);
+          eres = 0 + ((0.00171 + 0) / 200) * (Tempmax - 380);          
+      }
+      else if (Tempmax <= 780) {
+          eres = 0.00171 + ((0.00329 - 0.00171) / 200) * (Tempmax - 580);          
+      }
+      else if (Tempmax <= 880) {
+          eres = 0.00329 + ((0.005 - 0.00329) / 100) * (Tempmax - 780);
+      }
+      else {
+          eres = 0.005;
+         
+      }
+      
+     // Elong = ThermalElong + ((eres - ThermalElong) / Tempmax) * (Tempmax - Temp) - epsLitsp;
+      //if (Elong < 0) {
+          //Elong = 0.0;
+       //}
 
   }
 

@@ -454,7 +454,7 @@ Steel01Thermal::getElongTangent(double TempT, double &ET, double &Elong, double 
     
     // b=0.0335-(TempT - 680)*0.0067/100;
     
-    fp = fyT*(0.075 - (TempT - 680)*(0.075 - 0.005)/100);
+    fp = fyT*(0.075 - (TempT - 680)*(0.075 - 0.05)/100); //Typos was there, 0.05 iscorrected by Anand kumar IITJ
   }
   else if (TempT <= 880) {
     fy = fyT*(0.11 - (TempT - 780)*0.05/100);
