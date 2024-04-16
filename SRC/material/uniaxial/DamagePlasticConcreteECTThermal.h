@@ -22,8 +22,8 @@
 // Created: 06/13
 //
 // Description: This file contains the class definition for 
-// ConcreteECTThermal. ConcreteECTThermal is modified from Concrete02Thermal
-// ConcreteECTthermal is dedicated to provide a concrete material which 
+// DamagePlasticConcreteECTThermal. DamagePlasticConcreteECTThermal is modified from Concrete02Thermal
+// DamagePlasticConcreteECTThermal is dedicated to provide a concrete material which 
 // strictly satisfy Eurocode regarding the temperature dependent properties.
 
 // Concrete02 is written by FMK in the year of 2006 and based on Concr2.f
@@ -31,28 +31,30 @@
 
 
 
-#ifndef ConcreteECTThermal_h
-#define ConcreteECTThermal_h
+#ifndef DamagePlasticConcreteECTThermal_h
+#define DamagePlasticConcreteECTThermal_h
 
 #include <UniaxialMaterial.h>
 
-class ConcreteECTThermal : public UniaxialMaterial
+class DamagePlasticConcreteECTThermal : public UniaxialMaterial
 {
   public:
-    ConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
+    DamagePlasticConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
 	     double _epscu, double _rat, double _ft, double _Ets);
 
-    ConcreteECTThermal(void);
+    DamagePlasticConcreteECTThermal(void);
 
-    virtual ~ConcreteECTThermal();
+    virtual ~DamagePlasticConcreteECTThermal();
 
-    const char *getClassType(void) const {return "ConcreteECTThermal";};    
+    const char *getClassType(void) const {return "DamagePlasticConcreteECTThermal";};    
     double getInitialTangent(void);
     UniaxialMaterial *getCopy(void);
 
 
     int setTrialStrain(double strain, double rate);     //JZ this function is no use, just for the definiation of pure virtual function.
     int setTrialStrain(double strain, double FiberTemperature, double strainRate); //***JZ
+
+    double newton_raphson_(double Err, double e_elas, double initial_guess, double tolerance, int max_iterations); // added by AK
 
     double getStrain(void);      
     double getStress(void);
@@ -81,6 +83,8 @@ class ConcreteECTThermal : public UniaxialMaterial
     void Tens_Envlp (double epsc, double &sigc, double &Ect);
     void Compr_Envlp (double epsc, double &sigc, double &Ect);
     //double Phi_T(double T); //AK add for transient strain
+
+    void Residual_(double ee, double& sigc, double& Ect, double Err, double e_elas); // added by AK
 
     double Temp;  // concrete temp
     double steps;    //the amount of the steps.
@@ -117,6 +121,8 @@ class ConcreteECTThermal : public UniaxialMaterial
     double sigP;  //  = stress at previous converged step
     double eP;    //   stiffness modulus at last converged step;
     
+    double e_resP; // AK added to keep track of residual strain.
+    double dcP;
     
 	double TempP; //PK add the previous temperature
 
@@ -131,6 +137,8 @@ class ConcreteECTThermal : public UniaxialMaterial
     double epsLitsp; // AK add for transient strain
     double Eps_lits; // AK add for transient strain
     double Eps_litsP;
+    double e_res; // AK added to keep track of residual strain.
+    double dc;
 };
 
 

@@ -22,8 +22,8 @@
 // Created: 06/13
 //
 // Description: This file contains the class definition for 
-// ConcreteECTThermal. ConcreteECTThermal is modified from Concrete02Thermal
-// ConcreteECTthermal is dedicated to provide a concrete material which 
+// DamagePlasticConcreteECTThermal. DamagePlasticConcreteECTThermal is modified from Concrete02Thermal
+// DamagePlasticConcreteECTThermal is dedicated to provide a concrete material which 
 // strictly satisfy Eurocode regarding the temperature dependent properties.
 
 // Concrete02 is written by FMK in the year of 2006 and based on Concr2.f
@@ -31,7 +31,7 @@
 
 
 #include <stdlib.h>
-#include <ConcreteECTThermal.h>
+#include <DamagePlasticConcreteECTThermal.h>
 #include <OPS_Globals.h>
 #include <float.h>
 #include <Channel.h>
@@ -40,14 +40,8 @@
 #include <elementAPI.h>
 #include <OPS_Globals.h>
 
-//Added by AK 2023
-//double Temp_i = 0.0;
-
-//int it = 0;
-
-
 void *
-OPS_ConcreteECTThermal(void)
+OPS_DamagePlasticConcreteECTThermal(void)
 {
   // Pointer to a uniaxial material that will be returned
   UniaxialMaterial *theMaterial = 0;
@@ -57,28 +51,28 @@ OPS_ConcreteECTThermal(void)
   int numData = 1;
 
   if (OPS_GetIntInput(&numData, iData) != 0) {
-    opserr << "WARNING invalid uniaxialMaterial ConcreteECTThermal tag" << endln;
+    opserr << "WARNING invalid uniaxialMaterial DamagePlasticConcreteECTThermal tag" << endln;
     return 0;
   }
 
   numData = OPS_GetNumRemainingInputArgs();
 
   if (numData != 7) {
-    opserr << "Invalid #args, want: uniaxialMaterial ConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
+    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
     return 0;
   }
 
   if (OPS_GetDoubleInput(&numData, dData) != 0) {
-    opserr << "Invalid #args, want: uniaxialMaterial ConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
+    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
     return 0;
   }
 
 
   // Parsing was successful, allocate the material
-  theMaterial = new ConcreteECTThermal(iData[0], dData[0], dData[1], dData[2], dData[3], dData[4], dData[5], dData[6]);
+  theMaterial = new DamagePlasticConcreteECTThermal(iData[0], dData[0], dData[1], dData[2], dData[3], dData[4], dData[5], dData[6]);
   
   if (theMaterial == 0) {
-    opserr << "WARNING could not create uniaxialMaterial of type ConcreteECTThermal Material\n";
+    opserr << "WARNING could not create uniaxialMaterial of type DamagePlasticConcreteECTThermal Material\n";
     return 0;
   }
 
@@ -86,7 +80,7 @@ OPS_ConcreteECTThermal(void)
 }
 
 
-ConcreteECTThermal::ConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
+DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
 				     double _epscu, double _rat, double _ft, double _Ets):
   UniaxialMaterial(tag, MAT_TAG_ConcreteECTThermal),
   //fc(_fc), epsc0(_epsc0), fcu(_fcu), epscu(_epscu), rat(_rat), ft(_ft), Ets(_Ets)
@@ -125,15 +119,20 @@ ConcreteECTThermal::ConcreteECTThermal(int tag, double _fc, double _epsc0, doubl
   epsLitsp = 0.0; // AK add transient strain
   Eps_lits = 0.0;
   Eps_litsP = 0.0;
+
+  e_res = 0.0; // AK added to keep track of residual strain.
+  e_resP = 0.0;
+  dc = 0.0;
+  dcP = 0.0;
 }
 
-ConcreteECTThermal::ConcreteECTThermal(void):
+DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(void):
   UniaxialMaterial(0, MAT_TAG_ConcreteECTThermal)
 {
  
 }
 
-ConcreteECTThermal::~ConcreteECTThermal(void)
+DamagePlasticConcreteECTThermal::~DamagePlasticConcreteECTThermal(void)
 {
   // Does nothing
 }
@@ -142,145 +141,299 @@ ConcreteECTThermal::~ConcreteECTThermal(void)
 	
 
 UniaxialMaterial*
-ConcreteECTThermal::getCopy(void)
+DamagePlasticConcreteECTThermal::getCopy(void)
 {
-  ConcreteECTThermal *theCopy = new ConcreteECTThermal(this->getTag(), fc, epsc0, fcu, epscu, rat, ft, Ets);
+  DamagePlasticConcreteECTThermal *theCopy = new DamagePlasticConcreteECTThermal(this->getTag(), fc, epsc0, fcu, epscu, rat, ft, Ets);
   
   return theCopy;
 }
 
 double
-ConcreteECTThermal::getInitialTangent(void)
+DamagePlasticConcreteECTThermal::getInitialTangent(void)
 {
   return 2.0*fc/epsc0;
 }
 
 int
-ConcreteECTThermal::setTrialStrain(double trialStrain, double FiberTemperature, double strainRate)
+DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double FiberTemperature, double strainRate)
 {
-   double 	ec0 = fc * 2. / epsc0;//?
-   //double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
-  
-  // retrieve concrete hitory variables
-  
-  ecmin = ecminP;
-  dept = deptP;
-  
-  // calculate current strain
-  
-  eps = trialStrain;
-  double deps = eps - epsP;
-  
-  // if the current strain is less than the smallest previous strain 
-  // call the monotonic envelope in compression and reset minimum strain 
-  
-  if (eps < ecmin) {
-    this->Compr_Envlp(eps, sig, e);
-    ecmin = eps;
-  } else {;
-    
-    // else, if the current strain is between the minimum strain and ept 
-    // (which corresponds to zero stress) the material is in the unloading- 
-    // reloading branch and the stress remains between sigmin and sigmax 
-    
-    // calculate strain-stress coordinates of point R that determines 
-    // the reloading slope according to Fig.2.11 in EERC Report 
-    // (corresponding equations are 2.31 and 2.32 
-    // the strain of point R is epsR and the stress is sigmR 
-    
-    double epsr = (fcu - rat * ec0 * epscu) / (ec0 * (1.0 - rat));
-    double sigmr = ec0 * epsr;
-    
-    // calculate the previous minimum stress sigmm from the minimum 
-    // previous strain ecmin and the monotonic envelope in compression 
-    
-    double sigmm;
-    double dumy;
-    this->Compr_Envlp(ecmin, sigmm, dumy);
-    
-    // calculate current reloading slope Er (Eq. 2.35 in EERC Report) 
-    // calculate the intersection of the current reloading slope Er 
-    // with the zero stress axis (variable ept) (Eq. 2.36 in EERC Report) 
-    
-    double er = (sigmm - sigmr) / (ecmin - epsr);
-    double ept = ecmin - sigmm / er;
-    
-    if (eps <= ept) {
-      double sigmin = sigmm + er * (eps - ecmin);
-      double sigmax = er * .5f * (eps - ept);
-      sig = sigP + ec0 * deps;
-      e = ec0;
-      if (sig <= sigmin) { 
-	sig = sigmin;
-	e = er;
-      }      if (sig >= sigmax) {
-	sig = sigmax;
-	e = 0.5 * er;
-      }
-    } else {
-      
-      // else, if the current strain is between ept and epn 
-      // (which corresponds to maximum remaining tensile strength) 
-      // the response corresponds to the reloading branch in tension 
-      // Since it is not saved, calculate the maximum remaining tensile 
-      // strength sicn (Eq. 2.43 in EERC Report) 
-      
-      // calculate first the strain at the peak of the tensile stress-strain 
-      // relation epn (Eq. 2.42 in EERC Report) 
-      
-      double epn = ept + dept;
-      double sicn;
-      if (eps <= epn) {
-	this->Tens_Envlp(dept, sicn, e);
-	if (dept != 0.0) {
-	  e = sicn / dept;
-	} else {
-	  e = ec0;
-	}
-	sig = e * (eps - ept);
-      } else {
-	
-	// else, if the current strain is larger than epn the response 
-	// corresponds to the tensile envelope curve shifted by ept 
-	
-	double epstmp = eps - ept;
-	this->Tens_Envlp(epstmp, sig, e);
-	dept = eps - ept;
-      }
+    if (fc == fcT) {
+        double 	ec0 = fc * 2. / epsc0;//?
+        //double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
+
+       // retrieve concrete hitory variables
+
+        ecmin = ecminP;
+        dept = deptP;
+        // calculate current strain
+
+        eps = trialStrain;
+        double deps = eps - epsP;
+
+        // if the current strain is less than the smallest previous strain 
+        // call the monotonic envelope in compression and reset minimum strain 
+
+        if (eps < ecmin) {
+            this->Compr_Envlp(eps, sig, e);
+            ecmin = eps;
+        }
+        else {
+            ;
+
+            // else, if the current strain is between the minimum strain and ept 
+            // (which corresponds to zero stress) the material is in the unloading- 
+            // reloading branch and the stress remains between sigmin and sigmax 
+
+            // calculate strain-stress coordinates of point R that determines 
+            // the reloading slope according to Fig.2.11 in EERC Report 
+            // (corresponding equations are 2.31 and 2.32 
+            // the strain of point R is epsR and the stress is sigmR 
+
+            double epsr = (fcu - rat * ec0 * epscu) / (ec0 * (1.0 - rat));
+            double sigmr = ec0 * epsr;
+
+            // calculate the previous minimum stress sigmm from the minimum 
+            // previous strain ecmin and the monotonic envelope in compression 
+
+            double sigmm;
+            double dumy;
+            this->Compr_Envlp(ecmin, sigmm, dumy);
+
+            // calculate current reloading slope Er (Eq. 2.35 in EERC Report) 
+            // calculate the intersection of the current reloading slope Er 
+            // with the zero stress axis (variable ept) (Eq. 2.36 in EERC Report) 
+
+            double er = (sigmm - sigmr) / (ecmin - epsr);
+            double ept = ecmin - sigmm / er;
+
+            if (eps <= ept) {
+                double sigmin = sigmm + er * (eps - ecmin);
+                double sigmax = er * .5f * (eps - ept);
+                sig = sigP + ec0 * deps;
+                e = ec0;
+                if (sig <= sigmin) {
+                    sig = sigmin;
+                    e = er;
+                }      if (sig >= sigmax) {
+                    sig = sigmax;
+                    e = 0.5 * er;
+                }
+            }
+            else {
+
+                // else, if the current strain is between ept and epn 
+                // (which corresponds to maximum remaining tensile strength) 
+                // the response corresponds to the reloading branch in tension 
+                // Since it is not saved, calculate the maximum remaining tensile 
+                // strength sicn (Eq. 2.43 in EERC Report) 
+
+                // calculate first the strain at the peak of the tensile stress-strain 
+                // relation epn (Eq. 2.42 in EERC Report) 
+
+                double epn = ept + dept;
+                double sicn;
+                if (eps <= epn) {
+                    this->Tens_Envlp(dept, sicn, e);
+                    if (dept != 0.0) {
+                        e = sicn / dept;
+                    }
+                    else {
+                        e = ec0;
+                    }
+                    sig = e * (eps - ept);
+                }
+                else {
+
+                    // else, if the current strain is larger than epn the response 
+                    // corresponds to the tensile envelope curve shifted by ept 
+
+                    double epstmp = eps - ept;
+                    this->Tens_Envlp(epstmp, sig, e);
+                    dept = eps - ept;
+                }
+            }
+        }
+        //opserr<<"trialStrain: "<<eps << "  Stress: "<<sig<< "Modulus: "<<e<<endln;
     }
-  }
-//opserr<<"trialStrain: "<<eps << "  Stress: "<<sig<< "Modulus: "<<e<<endln;
+    else {       
+        double 	ec0 = fc * 2. / epsc0;//?      
+
+        ecmin = ecminP;
+        dept = deptP;        
+
+        // calculate current strain
+
+        eps = trialStrain;
+        double deps = eps - epsP;
+
+        double epsr = (fcu - rat * ec0 * epscu) / (ec0 * (1.0 - rat));
+        double sigmr = ec0 * epsr;
+        
+        double sigmm;
+        double dumy;
+        this->Compr_Envlp(ecmin, sigmm, dumy);
+
+        double er = (sigmm - sigmr) / (ecmin - epsr);
+        double ept = ecmin - sigmm / er;
+
+        dc = (1 - er / ec0);
+        e_res = ept;
+
+        // if the current strain is less than the smallest previous strain 
+        // call the monotonic envelope in compression and reset minimum strain 
+
+        if (eps < ecmin) {           
+            double sig1, e1;
+            this->Compr_Envlp(eps, sig1, e1);          
+                        
+            double E_rr = (1 - dcP) * ec0;
+            double e_elas = eps - e_resP;
+            double sig_star = E_rr * e_elas;
+
+            if (sig_star < sig1) {                
+                sig = sig1;
+                dc = (1 - er / ec0);
+                e_res = eps - sigmm / er;
+                ecmin = eps;
+                e = e1;
+            }
+            else {
+                sig = sig_star;
+                dc = dcP;
+                e_res = e_resP;  
+                ecmin = eps;     
+                e = E_rr;
+            }
+        }
+        else {   
+            double DelT = Temp - TempP;
+
+            double sig3, e3;
+            this->Compr_Envlp(eps, sig3, e3);
+
+            double E_rr = (1 - dcP) * ec0;
+            double e_elas = eps - e_resP;
+            double sig_star = E_rr * e_elas;
+
+            double sigmin = sigmm + er * (eps - ecmin);
+            double sigmax = er * 0.5 * (eps - ept);
+            double sig2 = sigP + ec0 * deps;
+            double e2 = 0.0;
+
+            if (sig2 <= sigmin) {
+                sig2 = sigmin;
+                e2 = ec0;
+            }   if (sig2 >= sigmax) {
+                sig2 = sigmax;
+                e2 = 0.5 * ec0;
+            }
+
+            if (DelT < -1.0) {
+                if (sig_star > sig3) {
+                    double e1 = this->newton_raphson_(E_rr, e_resP, eps, 0.0001, 100);
+                    ecmin = e1;
+                    ept = ecmin - sigmm / er;
+                }
+            }
+
+            if (eps <= ept) {
+                if (DelT <= -1) {
+                    if (sig_star > sig3) {
+                        double e1 = this->newton_raphson_(E_rr, e_resP, eps, 0.0001, 100);
+                        ecmin = e1;
+                        ept = ecmin - sigmm / er;                        
+                        sig = sig_star;
+                        e_res = e_resP;
+                        dc = dcP;
+                        e = E_rr;
+                    }
+                    else {
+                        sig = sig3;
+                        ecmin = eps;
+                        dc = (1 - er / ec0);
+                        e_res = eps - sigmm / er;
+                        e = e3;
+                    }
+                }
+                else if (DelT == 0) {
+                    sig = sig2;
+                    e_res = e_resP;
+                    dc = dcP;
+                    e = e2;
+                }
+                else {
+                    if (sig_star < sig2) {
+                        sig = sig2;
+                        dc = dcP;
+                        e_res = e_resP;
+                        e = e2;
+                    }
+                    else {
+                        sig = sig_star;
+                        dc = dcP;
+                        e_res = e_resP;
+                        e = E_rr;
+                    }
+                }
+            }
+            else {
+
+                // else, if the current strain is between ept and epn 
+                // (which corresponds to maximum remaining tensile strength) 
+                // the response corresponds to the reloading branch in tension 
+                // Since it is not saved, calculate the maximum remaining tensile              
+
+                double epn = ept + dept;
+                double sicn;
+                if (eps <= epn) {
+                    this->Tens_Envlp(dept, sicn, e);
+                    if (dept != 0.0) {
+                        e = sicn / dept;
+                    }
+                    else {
+                        e = ec0;
+                    }
+                    sig = e * (eps - ept);
+                }
+                else {
+                    double epstmp = eps - ept;
+                    this->Tens_Envlp(epstmp, sig, e);
+                    dept = eps - ept;
+                }
+            }
+        }
+    }
   return 0;
 }
 
 
 
 double 
-ConcreteECTThermal::getStrain(void)
+DamagePlasticConcreteECTThermal::getStrain(void)
 {
   return eps;
 }
 
 double 
-ConcreteECTThermal::getStress(void)
+DamagePlasticConcreteECTThermal::getStress(void)
 {
   return sig;
 }
 
 double 
-ConcreteECTThermal::getTangent(void)
+DamagePlasticConcreteECTThermal::getTangent(void)
 {
   return e;
 }
 
 double 
-ConcreteECTThermal::getThermalElongation(void) //***JZ
+DamagePlasticConcreteECTThermal::getThermalElongation(void) //***JZ
 {
   return ThermalElongation;
 }
 
 double 
-ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, double TempTmax) //PK add to include max temp
+DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, double TempTmax) //PK add to include max temp
 {
   //material properties with temperature
     if (TempT < 1) {
@@ -325,7 +478,7 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
 	  //Ets = EtsT;  jz what is there the statement?
   }
   else if (Temp <= 80) {
-	  fc = fcT;
+	  fc = fcT * 0.99999;    // to make fc =! fcT to detect start of heating phase // AK
 	  epsc0 = -(0.0025 + (0.003-0.0025)*(Temp - 0)/(80 - 0));
 	  fcu = fcuT;
 	  epscu = -(0.0200 + (0.0225-0.0200)*(Temp - 0)/(80 - 0));
@@ -733,7 +886,7 @@ ConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, dou
 }
 
 int 
-ConcreteECTThermal::commitState(void)
+DamagePlasticConcreteECTThermal::commitState(void)
 {
   ecminP = ecmin;
   deptP = dept;
@@ -745,12 +898,16 @@ ConcreteECTThermal::commitState(void)
   TempP = Temp; //PK add set the previous temperature
   //epsLitsp = Eps_lits;
   Eps_litsP = Eps_lits;
+
+  e_resP = e_res; // AK added to keep track of residual strain.
+  dcP = dc;
+
   TmaxP = Tmax;
   return 0;
 }
 
 int 
-ConcreteECTThermal::revertToLastCommit(void)
+DamagePlasticConcreteECTThermal::revertToLastCommit(void)
 {
   ecmin = ecminP;
   dept = deptP;
@@ -760,7 +917,10 @@ ConcreteECTThermal::revertToLastCommit(void)
   eps = epsP;
   Eps_lits = Eps_litsP;
 
-  //Temp = TempP; //PK add set the previous temperature
+  e_res = e_resP; // AK added to keep track of residual strain.
+  dc = dcP;
+
+  Temp = TempP; //PK add set the previous temperature
 
   // NA ELENXW MIPWS EDW XANETAI TO TEMP LOGW MIN CONVERGENCE
 
@@ -768,7 +928,7 @@ ConcreteECTThermal::revertToLastCommit(void)
 }
 
 int 
-ConcreteECTThermal::revertToStart(void)
+DamagePlasticConcreteECTThermal::revertToStart(void)
 {
   ecminP = 0.0;
   deptP = 0.0;
@@ -784,7 +944,7 @@ ConcreteECTThermal::revertToStart(void)
 }
 
 int 
-ConcreteECTThermal::sendSelf(int commitTag, Channel &theChannel)
+DamagePlasticConcreteECTThermal::sendSelf(int commitTag, Channel &theChannel)
 {
   static Vector data(13);
   data(0) =fc;    
@@ -802,21 +962,21 @@ ConcreteECTThermal::sendSelf(int commitTag, Channel &theChannel)
   data(12) = this->getTag();
 
   if (theChannel.sendVector(this->getDbTag(), commitTag, data) < 0) {
-    opserr << "ConcreteECTThermal::sendSelf() - failed to sendSelf\n";
+    opserr << "DamagePlasticConcreteECTThermal::sendSelf() - failed to sendSelf\n";
     return -1;
   }
   return 0;
 }
 
 int 
-ConcreteECTThermal::recvSelf(int commitTag, Channel &theChannel, 
+DamagePlasticConcreteECTThermal::recvSelf(int commitTag, Channel &theChannel, 
 	     FEM_ObjectBroker &theBroker)
 {
 
   static Vector data(13);
 
   if (theChannel.recvVector(this->getDbTag(), commitTag, data) < 0) {
-    opserr << "ConcreteECTThermal::recvSelf() - failed to recvSelf\n";
+    opserr << "DamagePlasticConcreteECTThermal::recvSelf() - failed to recvSelf\n";
     return -1;
   }
 
@@ -842,13 +1002,13 @@ ConcreteECTThermal::recvSelf(int commitTag, Channel &theChannel,
 }
 
 void 
-ConcreteECTThermal::Print(OPS_Stream &s, int flag)
+DamagePlasticConcreteECTThermal::Print(OPS_Stream &s, int flag)
 {
-  s << "ConcreteECTThermal:(strain, stress, tangent) " << eps << " " << sig << " " << e << endln;
+  s << "DamagePlasticConcreteECTThermal:(strain, stress, tangent) " << eps << " " << sig << " " << e << endln;
 }
 
 void
-ConcreteECTThermal::Tens_Envlp (double epsc, double &sigc, double &Ect)
+DamagePlasticConcreteECTThermal::Tens_Envlp (double epsc, double &sigc, double &Ect)
 {
 /*-----------------------------------------------------------------------
 ! monotonic envelope of concrete in tension (positive envelope)
@@ -886,7 +1046,7 @@ ConcreteECTThermal::Tens_Envlp (double epsc, double &sigc, double &Ect)
 
   
 void
-ConcreteECTThermal::Compr_Envlp (double epsc, double &sigc, double &Ect) 
+DamagePlasticConcreteECTThermal::Compr_Envlp (double epsc, double &sigc, double &Ect) 
 {
 /*-----------------------------------------------------------------------
 ! monotonic envelope of concrete in compression (negative envelope)
@@ -931,8 +1091,62 @@ ConcreteECTThermal::Compr_Envlp (double epsc, double &sigc, double &Ect)
   return;
 }
 
+double
+DamagePlasticConcreteECTThermal::newton_raphson_(double Err, double e_res, double initial_guess, double tolerance, int max_iterations) {
+    double e = initial_guess;
+    int iteration = 0;
+    double el = 0.0;
+    double tol = 0.0;
+
+    while (iteration < max_iterations && tol == 0) {
+        double r;
+        double dr_de;
+        this->Residual_(e, r, dr_de, Err, e_res);
+
+        // Update del_e using the Newton-Raphson formula
+        double del_e = r / dr_de;
+
+        // Check for convergence based on tolerance
+        if (fabs(r) < tolerance) {
+            //std::cout << "Converged after " << iteration + 1 << " iterations." << std::endl;
+            tol = 1;
+            el = e - del_e;
+        }
+        e = e - del_e;
+        iteration++;
+    }
+    return el;
+}
+
+void
+DamagePlasticConcreteECTThermal::Residual_(double ee, double& r, double& dr_de, double Err, double e_res) {
+    if (ee > epsc0) {
+        double ratLocal = ee / epsc0;
+        double ratSquare = ratLocal * ratLocal;
+        double rSquare = (1 + ratSquare) * (1 + ratSquare);
+        double sigc = 2 * ratLocal * fc / (1.0 + ratSquare);
+        double Ect = (2 * fc / epsc0) * (1 - ratSquare) / rSquare;
+        r = sigc - Err * (ee - e_res);
+        dr_de = Ect - Err;
+    }
+    else {
+        if (ee > epscu) {
+            double sigc = (fcu - fc) * (ee - epsc0) / (epscu - epsc0) + fc;
+            double Ect = (fcu - fc) / (epscu - epsc0);
+            r = sigc - Err * (ee - e_res);
+            dr_de = Ect - Err;
+        }
+        else {
+            double sigc = fcu;
+            double Ect = 1.0e-10;
+            r = sigc - Err * (ee - e_res);
+            dr_de = 0.0 - Err;
+        }
+    }
+}
+
 int
-ConcreteECTThermal::getVariable(const char *varName, Information &theInfo)
+DamagePlasticConcreteECTThermal::getVariable(const char *varName, Information &theInfo)
 {
   if (strcmp(varName,"ec") == 0) {
     theInfo.theDouble = epsc0;
@@ -975,8 +1189,8 @@ ConcreteECTThermal::getVariable(const char *varName, Information &theInfo)
 
 //this function is no use, just for the definiation of pure virtual function.
 int
-ConcreteECTThermal::setTrialStrain(double strain, double strainRate)
+DamagePlasticConcreteECTThermal::setTrialStrain(double strain, double strainRate)
 {
-  opserr << "ConcreteECTThermal::setTrialStrain(double strain, double strainRate) - should never be called\n";
+  opserr << "DamagePlasticConcreteECTThermal::setTrialStrain(double strain, double strainRate) - should never be called\n";
   return -1;
 }

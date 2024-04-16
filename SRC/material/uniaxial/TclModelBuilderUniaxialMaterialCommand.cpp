@@ -129,6 +129,7 @@ extern void *OPS_ConcreteECThermal(void);// L.Jiang [SIF]
 extern void *OPS_ConcreteECTThermal(void);// Anand Kumar
 extern void* OPS_SteelDPM(void); //Anand Kumar
 extern void* OPS_SteelDPM1(void); //Anand Kumar
+extern void* OPS_DamagePlasticConcreteECTThermal(void); //Anand Kumar
 extern void *OPS_ElasticMaterialThermal(void); //L.Jiang[SIF]
 extern void* OPS_JointEPMaterial(void); //L.Jiang[SIF]
 
@@ -624,6 +625,14 @@ TclModelBuilderUniaxialMaterialCommand (ClientData clientData, Tcl_Interp *inter
             return TCL_ERROR;
         // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
     }
+    else if (strcmp(argv[1], "DamagePlasticConcreteECTThermal") == 0) {
+        void* theMat = OPS_DamagePlasticConcreteECTThermal();
+        if (theMat != 0)
+            theMaterial = (UniaxialMaterial*)theMat;
+        else
+            return TCL_ERROR;
+        // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
+        }
     else if (strcmp(argv[1], "JointEPThermal") == 0) {
     void* theMat = OPS_JointEPMaterial();
     if (theMat != 0)

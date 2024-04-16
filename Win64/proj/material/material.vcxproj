@@ -179,6 +179,7 @@
     <ClCompile Include="..\..\..\SRC\material\uniaxial\ConcretewBeta.cpp" />
     <ClCompile Include="..\..\..\SRC\material\uniaxial\ConfinedConcrete01.cpp" />
     <ClCompile Include="..\..\..\SRC\material\uniaxial\CubicSpline.cpp" />
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\DamagePlasticConcreteECTThermal.cpp" />
     <ClCompile Include="..\..\..\SRC\material\uniaxial\DamperMaterial.cpp" />
     <ClCompile Include="..\..\..\SRC\material\uniaxial\Dodd_Restrepo.cpp" />
     <ClCompile Include="..\..\..\SRC\material\uniaxial\DrainMaterial.cpp" />
@@ -538,6 +539,7 @@
     <ClInclude Include="..\..\..\SRC\material\uniaxial\ConcretewBeta.h" />
     <ClInclude Include="..\..\..\SRC\material\uniaxial\ConfinedConcrete01.h" />
     <ClInclude Include="..\..\..\SRC\material\uniaxial\CubicSpline.h" />
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\DamagePlasticConcreteECTThermal.h" />
     <ClInclude Include="..\..\..\SRC\material\uniaxial\DamperMaterial.h" />
     <ClInclude Include="..\..\..\SRC\material\uniaxial\Dodd_Restrepo.h" />
     <ClInclude Include="..\..\..\SRC\material\uniaxial\DrainMaterial.h" />

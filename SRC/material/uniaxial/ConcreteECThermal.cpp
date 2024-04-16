@@ -395,7 +395,7 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
 
   ET = 2*fc/epsc0; 
   Elong = ThermalElongation;
-
+ 
   DelT = Temp - TempP;
   if (DelT > 1.0) {
       Tmax = Temp;
@@ -421,7 +421,7 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
       // PK Determine residual compressive strength of concrete heated to the max temp and then having cooled down to ambient
       // This will be the same for all the timesteps during the cooling phase
       // PK 1st step is to determine Kc,Tempmax according to table in 3.2.2 (EN1994-1-2:2005)
-
+      
       if (Tempmax < 0) {
           opserr << "max temperature cannot be less than zero9 " << " " << Tempmax << endln;
       }
