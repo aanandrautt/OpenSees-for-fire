@@ -34,7 +34,7 @@
 
 ConcreteEC2::ConcreteEC2(int tag, double moisture, bool isLower)
 :HeatTransferMaterial(tag), trial_temp(0.0), ini_temp(0.0), 
- rho(2300.0), rho_a(2300.0), cp(900.0), enthalpy(0.0), moist(moisture), IsLower(isLower)
+ rho(2800.0), rho_a(2800.0), cp(900.0), enthalpy(0.0), moist(moisture), IsLower(isLower)
 {
     if ( k == 0){
 		k = new Matrix(3,3);

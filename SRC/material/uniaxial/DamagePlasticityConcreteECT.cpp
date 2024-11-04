@@ -18,30 +18,27 @@
 **                                                                    **
 ** ****************************************************************** */
                                                                        
-// Added by Liming Jiang (UoE)
-// Created: 06/13
-//
-// Description: This file contains the class definition for 
-// DamagePlasticConcreteECTThermal. DamagePlasticConcreteECTThermal is modified from Concrete02Thermal
-// DamagePlasticConcreteECTThermal is dedicated to provide a concrete material which 
-// strictly satisfy Eurocode regarding the temperature dependent properties.
+// Added by Anand Kumar IITJ 
+// Created: 02/2023
+
 
 // Concrete02 is written by FMK in the year of 2006 and based on Concr2.f
 
 
 
 #include <stdlib.h>
-#include <DamagePlasticConcreteECTThermal.h>
+#include <DamagePlasticityConcreteECT.h>
 #include <OPS_Globals.h>
 #include <float.h>
 #include <Channel.h>
 #include <Information.h>
+#include <MaterialResponse.h>   //Added by Anand Kumar [IITJ 2024] for damage recorder
 
 #include <elementAPI.h>
 #include <OPS_Globals.h>
 
 void *
-OPS_DamagePlasticConcreteECTThermal(void)
+OPS_DamagePlasticityConcreteECT(void)
 {
   // Pointer to a uniaxial material that will be returned
   UniaxialMaterial *theMaterial = 0;
@@ -51,28 +48,28 @@ OPS_DamagePlasticConcreteECTThermal(void)
   int numData = 1;
 
   if (OPS_GetIntInput(&numData, iData) != 0) {
-    opserr << "WARNING invalid uniaxialMaterial DamagePlasticConcreteECTThermal tag" << endln;
+    opserr << "WARNING invalid uniaxialMaterial DamagePlasticityConcreteECT tag" << endln;
     return 0;
   }
 
   numData = OPS_GetNumRemainingInputArgs();
 
   if (numData != 7) {
-    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
+    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticityConcreteECT " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
     return 0;
   }
 
   if (OPS_GetDoubleInput(&numData, dData) != 0) {
-    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticConcreteECTThermal " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
+    opserr << "Invalid #args, want: uniaxialMaterial DamagePlasticityConcreteECT " << iData[0] << "fpc? epsc0? fpcu? epscu? rat? ft? Ets?\n";
     return 0;
   }
 
 
   // Parsing was successful, allocate the material
-  theMaterial = new DamagePlasticConcreteECTThermal(iData[0], dData[0], dData[1], dData[2], dData[3], dData[4], dData[5], dData[6]);
+  theMaterial = new DamagePlasticityConcreteECT(iData[0], dData[0], dData[1], dData[2], dData[3], dData[4], dData[5], dData[6]);
   
   if (theMaterial == 0) {
-    opserr << "WARNING could not create uniaxialMaterial of type DamagePlasticConcreteECTThermal Material\n";
+    opserr << "WARNING could not create uniaxialMaterial of type DamagePlasticityConcreteECT Material\n";
     return 0;
   }
 
@@ -80,9 +77,9 @@ OPS_DamagePlasticConcreteECTThermal(void)
 }
 
 
-DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
+DamagePlasticityConcreteECT::DamagePlasticityConcreteECT(int tag, double _fc, double _epsc0, double _fcu,
 				     double _epscu, double _rat, double _ft, double _Ets):
-  UniaxialMaterial(tag, MAT_TAG_ConcreteECTThermal),
+  UniaxialMaterial(tag, MAT_TAG_DamagePlasticityConcreteECT),
   //fc(_fc), epsc0(_epsc0), fcu(_fcu), epscu(_epscu), rat(_rat), ft(_ft), Ets(_Ets)
   fcT(_fc), epsc0T(_epsc0), fcuT(_fcu), epscuT(_epscu), rat(_rat), ftT(_ft), EtsT(_Ets) //JZ
 {
@@ -111,6 +108,7 @@ DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(int tag, double
   //if epsc0 is not 0.0025, then epsc0 = strainRatio*0.0025
   strainRatio = epsc0/0.0025;
   ThermalElongation = 0; //initialize 
+  Tstrain = 0.0;
 
   cooling=0; //PK add
   TempP = 0.0; //Pk add previous temp
@@ -124,15 +122,21 @@ DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(int tag, double
   e_resP = 0.0;
   dc = 0.0;
   dcP = 0.0;
+  dt = 0;
+  dtP = 0.0;
+  damageC = 0.0;
+  damageT = 0.0;
+  epti = 0.0;
+  eptiP = 0.0;
 }
 
-DamagePlasticConcreteECTThermal::DamagePlasticConcreteECTThermal(void):
-  UniaxialMaterial(0, MAT_TAG_ConcreteECTThermal)
+DamagePlasticityConcreteECT::DamagePlasticityConcreteECT(void):
+  UniaxialMaterial(0, MAT_TAG_DamagePlasticityConcreteECT)
 {
  
 }
 
-DamagePlasticConcreteECTThermal::~DamagePlasticConcreteECTThermal(void)
+DamagePlasticityConcreteECT::~DamagePlasticityConcreteECT(void)
 {
   // Does nothing
 }
@@ -141,23 +145,24 @@ DamagePlasticConcreteECTThermal::~DamagePlasticConcreteECTThermal(void)
 	
 
 UniaxialMaterial*
-DamagePlasticConcreteECTThermal::getCopy(void)
+DamagePlasticityConcreteECT::getCopy(void)
 {
-  DamagePlasticConcreteECTThermal *theCopy = new DamagePlasticConcreteECTThermal(this->getTag(), fc, epsc0, fcu, epscu, rat, ft, Ets);
+  DamagePlasticityConcreteECT *theCopy = new DamagePlasticityConcreteECT(this->getTag(), fc, epsc0, fcu, epscu, rat, ft, Ets);
   
   return theCopy;
 }
 
 double
-DamagePlasticConcreteECTThermal::getInitialTangent(void)
+DamagePlasticityConcreteECT::getInitialTangent(void)
 {
   return 2.0*fc/epsc0;
 }
 
 int
-DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double FiberTemperature, double strainRate)
+DamagePlasticityConcreteECT::setTrialStrain(double trialStrain, double FiberTemperature, double strainRate)
 {
-    if (fc == fcT) {
+    if (fc == fcT && ft == ftT) {
+
         double 	ec0 = fc * 2. / epsc0;//?
         //double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
 
@@ -255,6 +260,7 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
         }
         //opserr<<"trialStrain: "<<eps << "  Stress: "<<sig<< "Modulus: "<<e<<endln;
     }
+
     else {       
         double 	ec0 = fc * 2. / epsc0;//?      
 
@@ -275,9 +281,6 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
 
         double er = (sigmm - sigmr) / (ecmin - epsr);
         double ept = ecmin - sigmm / er;
-
-        dc = (1 - er / ec0);
-        e_res = ept;
 
         // if the current strain is less than the smallest previous strain 
         // call the monotonic envelope in compression and reset minimum strain 
@@ -304,10 +307,9 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
                 ecmin = eps;     
                 e = E_rr;
             }
+           damageC = dc;
         }
         else {   
-            double DelT = Temp - TempP;
-
             double sig3, e3;
             this->Compr_Envlp(eps, sig3, e3);
 
@@ -328,20 +330,10 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
                 e2 = 0.5 * ec0;
             }
 
-            if (DelT < -1.0) {
-                if (sig_star > sig3) {
-                    double e1 = this->newton_raphson_(E_rr, e_resP, eps, 0.0001, 100);
-                    ecmin = e1;
-                    ept = ecmin - sigmm / er;
-                }
-            }
-
+            
             if (eps <= ept) {
-                if (DelT <= -1) {
-                    if (sig_star > sig3) {
-                        double e1 = this->newton_raphson_(E_rr, e_resP, eps, 0.0001, 100);
-                        ecmin = e1;
-                        ept = ecmin - sigmm / er;                        
+                if (DelTP <= -0.1) {
+                    if (sig_star > sig3) {                                             
                         sig = sig_star;
                         e_res = e_resP;
                         dc = dcP;
@@ -355,7 +347,7 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
                         e = e3;
                     }
                 }
-                else if (DelT == 0) {
+                else if (DelTP == 0) {
                     sig = sig2;
                     e_res = e_resP;
                     dc = dcP;
@@ -375,31 +367,43 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
                         e = E_rr;
                     }
                 }
+                damageC = dc;
             }
-            else {
-
-                // else, if the current strain is between ept and epn 
-                // (which corresponds to maximum remaining tensile strength) 
-                // the response corresponds to the reloading branch in tension 
-                // Since it is not saved, calculate the maximum remaining tensile              
+            else {      
 
                 double epn = ept + dept;
                 double sicn;
+           
+                double eptu = ft * (1 / Ets + 1 / ec0);
+                double eptd = fabs(eps - ept);
+                
+                epti = eptu / (1 + (1 - dtP) * (ec0 / Ets));
+                
+
+                if (eptd >= (ft / ec0)) {
+                    dt = 1 - (Ets * fabs(eptu - eptd) / (ec0 * eptd));
+                    if (dt > dtP) {
+                        dtP = dt;
+                    }
+                   
+                   damageT = dtP;
+                }
+
                 if (eps <= epn) {
                     this->Tens_Envlp(dept, sicn, e);
                     if (dept != 0.0) {
-                        e = sicn / dept;
+                        e = sicn / dept;                  
                     }
                     else {
-                        e = ec0;
+                        e = ec0;                     
                     }
-                    sig = e * (eps - ept);
+                    sig = e * (eps - ept);                  
                 }
                 else {
                     double epstmp = eps - ept;
                     this->Tens_Envlp(epstmp, sig, e);
-                    dept = eps - ept;
-                }
+                    dept = eps - ept;                 
+                } 
             }
         }
     }
@@ -409,34 +413,58 @@ DamagePlasticConcreteECTThermal::setTrialStrain(double trialStrain, double Fiber
 
 
 double 
-DamagePlasticConcreteECTThermal::getStrain(void)
+DamagePlasticityConcreteECT::getStrain(void)
 {
   return eps;
 }
 
 double 
-DamagePlasticConcreteECTThermal::getStress(void)
+DamagePlasticityConcreteECT::getStress(void)
 {
   return sig;
 }
 
 double 
-DamagePlasticConcreteECTThermal::getTangent(void)
+DamagePlasticityConcreteECT::getTangent(void)
 {
   return e;
 }
 
+double
+DamagePlasticityConcreteECT::getDamageC(void)
+{
+   return damageC;
+}
+
+double
+DamagePlasticityConcreteECT::getDamageT(void)
+{
+    return damageT;
+}
+
 double 
-DamagePlasticConcreteECTThermal::getThermalElongation(void) //***JZ
+DamagePlasticityConcreteECT::getThermalElongation(void) //***JZ
 {
   return ThermalElongation;
 }
 
+double
+DamagePlasticityConcreteECT::getTstrain(void) //***JZ
+{
+    return Tstrain;
+}
+
+double
+DamagePlasticityConcreteECT::getLITS(void) //***JZ
+{
+    return epsLitsp;
+}
+
 double 
-DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, double& Elong, double TempTmax) //PK add to include max temp
+DamagePlasticityConcreteECT::getElongTangent(double TempT, double& ET, double& Elong, double TempTmax) //PK add to include max temp
 {
   //material properties with temperature
-    if (TempT < 1) {
+    if (TempT < 0.1) {
         Temp = 0.0;
     }
     else {
@@ -450,10 +478,10 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
   bool Lits = true;  // AK add for trainsient strain
   double PhiT = 0.0;  // AK add for trainsient strain
   double PhiTP = 0.0; // AK add for trainsient strain
-  double DelT = 0.0; // AK add for trainsient strain
-     
+  //double DelT = 0.0; // AK add for trainsient strain
+       
   if (Temp <= 80) {
-	  ft = ftT;
+      ft = ftT;
   }
   else if (Temp <= 580) {
 	  ft = (1.0 - 1.0*(Temp -80)/500)*ftT;
@@ -484,10 +512,10 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
 	  epscu = -(0.0200 + (0.0225-0.0200)*(Temp - 0)/(80 - 0));
   }
   else if (Temp <= 180) {
-      fc = fcT*(1 - (Temp - 80)*0.05/100);
-	  epsc0 = -(0.0030 + (0.003833-0.0030)*(Temp - 80)/100);
-      fcu = fcuT*(1 - (Temp - 80)*0.05/100);
-	  epscu = -(0.0225 + (0.0225-0.0200)*(Temp - 80)/100);
+      fc = fcT * (1 - (Temp - 80) * 0.05 / 100);
+      epsc0 = -(0.0030 + (0.003833 - 0.0030) * (Temp - 80) / 100);
+      fcu = fcuT * (1 - (Temp - 80) * 0.05 / 100);
+      epscu = -(0.0225 + (0.0225 - 0.0200) * (Temp - 80) / 100);
   }
   else if (Temp <= 280) {
       fc = fcT*(0.95 - (Temp - 180)*0.1/100);
@@ -527,7 +555,7 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
   }
   else if (Temp <= 880) {
       fc = fcT*(0.15 - (Temp - 780)*0.07/100);
-	  epsc0 = -(0.014 + (0.015 - 0.014) * (Temp - 680) / 100);
+	  epsc0 = -(0.014 + (0.015 - 0.014) * (Temp - 780) / 100);
 	  fcu = fcuT*(0.15 - (Temp - 780)*0.07/100);
 	  epscu = -(0.04 + 0.0025*(Temp - 780)/100);
   }
@@ -544,7 +572,11 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
 	  epscu = -(0.045 + 0.0025*(Temp - 980)/100);
   }
   else  {
-      opserr << "the temperature is invalid\n"; 
+      // Added by Anand Kumar to handle temperature greater than 1100
+      fc = 0.00001 * fcT;
+      epsc0 = -0.0150;
+      fcu = fcuT * 0.0001;
+      epscu = -0.05;
   }
 //jz assign a miner to the valuables
 
@@ -554,12 +586,15 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
   // caculation of thermal elongation
 	  if (Temp <= 1) {
 		  ThermalElongation = (Temp - 0) * 9.213e-6;
+          Tstrain = (Temp - 0) * 9.213e-6;
 	  }
   else if (Temp <= 680) {
       ThermalElongation = -1.8e-4 + 9e-6 *(Temp+20) + 2.3e-11 *(Temp+20)*(Temp+20)*(Temp+20);
+      Tstrain = -1.8e-4 + 9e-6 * (Temp + 20) + 2.3e-11 * (Temp + 20) * (Temp + 20) * (Temp + 20);
   }
-  else if (Temp <= 1180) {
-      ThermalElongation = 14e-3;
+  else if (Temp <= 1380) {
+      ThermalElongation = 14e-3;   //Temp <= 1180 is modified as 1380 to handle temperature greater than 1200
+      Tstrain = 14e-3;
   }
   else {
 	  opserr << "the temperature is invalid\n";
@@ -657,13 +692,13 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
   Elong = ThermalElongation;
 
   DelT = Temp - TempP;
-  if (DelT > 1.0) {
+  if (DelT > 0.091) {
       Tmax = Temp;
   }
  
   ///PK COOLING PART FOR DESCENDING BRANCH OF A FIRE//// 
   /// If temperature is less that previous commited temp then we have cooling taking place
-  if ((Temp - TempP) < -1.0) {
+  if ((Temp - TempP) < -0.091) {
       //cooling = 1.0;
       //opserr << "cooling " << cooling << endln;
       Tempmax = TmaxP;
@@ -723,7 +758,7 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
       }
       else if (Tempmax <= 780) {
           kappa = 0.30 - (Tempmax - 680) * 0.15 / 100;
-          fcmax = fcT * (0.30 - (Tempmax - 680) * 0.15 / 100);
+          fcmax = fcT * (0.30 - (Tempmax - 680) * 0.15 / 100);  
           fcumax = fcuT * (0.30 - (Tempmax - 680) * 0.15 / 100);
       }
       else if (Tempmax <= 880) {
@@ -742,7 +777,11 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
           fcumax = fcuT * (0.04 - (Tempmax - 980) * 0.03 / 100);
       }
       else {
-          opserr << "the temperature is invalid\n";
+          //opserr << "the temperature is invalid\n";
+          // added by anand kumar to handle temperature greater than 1100
+          kappa = 0.000001;
+          fcmax = fcT * (0.000001);
+          fcumax = fcuT * (0.000001);
       }
       // PK 2nd step is to determine compressive strength at ambient after cooling as shown in ANNEX C (EN1994-1-2:2005)  
       if (Tempmax < 0) {
@@ -753,15 +792,18 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
           fcuamb = kappa * fcuT;
       }
       else if (Tempmax <= 280) {
-          fcamb = (1 - (0.235 * (Tempmax - 80) / 200)) * fcT;
+          fcamb = (1 - (0.235 * (Tempmax - 80) / 200)) * fcT;  //0.235
           fcuamb = (1 - (0.235 * (Tempmax - 80) / 200)) * fcuT;
       }
       else if (Tempmax <= 1080) {
           fcamb = 0.9 * kappa * fcT;
-          fcuamb = 0.9 * kappa * fcuT;
+          fcuamb = 0.9* kappa * fcuT;
       }
       else {
-          opserr << "the temperature is invalid\n";
+          //opserr << "the temperature is invalid\n";
+          // added by anand kumar to handle temperature greater than 1100
+          fcamb = 0.9 * kappa * fcT;
+          fcuamb = 0.9 * kappa * fcuT;
       }
 
       // Calculation of current compressive strength
@@ -775,51 +817,67 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
           opserr << "max temperature cannot be less than zero " << " " << Tempmax << endln;
       }
       else if (Tempmax <= 80) {
-          epsc0max = -(0.0025 + (0.004 - 0.0025) * (Tempmax - 0) / (80 - 0));
+          //epsc0max = -(0.0025 + (0.004 - 0.0025) * (Tempmax - 0) / (80 - 0));
+          epsc0max = -(0.0025 + (0.003 - 0.0025) * (Tempmax - 0) / (80 - 0));
           epscumax = -(0.0200 + (0.0225 - 0.0200) * (Tempmax - 0) / (80 - 0));
       }
       else if (Tempmax <= 180) {
-          epsc0max = -(0.0040 + (0.0055 - 0.0040) * (Tempmax - 80) / 100);
+          //epsc0max = -(0.0040 + (0.0055 - 0.0040) * (Tempmax - 80) / 100);
+          epsc0max = -(0.0030 + (0.003833 - 0.0030) * (Tempmax - 80) / 100);
           epscumax = -(0.0225 + (0.0225 - 0.0200) * (Tempmax - 80) / 100);
       }
       else if (Tempmax <= 280) {
-          epsc0max = -(0.0055 + (0.0070 - 0.0055) * (Tempmax - 180) / 100);
+          //epsc0max = -(0.0055 + (0.0070 - 0.0055) * (Tempmax - 180) / 100);
+          epsc0max = -(0.003833 + (0.0050 - 0.003833) * (Tempmax - 180) / 100);
           epscumax = -(0.0250 + 0.0025 * (Tempmax - 180) / 100);
       }
       else if (Tempmax <= 380) {
-          epsc0max = -(0.0070 + (0.0100 - 0.0070) * (Tempmax - 280) / 100);
+          //epsc0max = -(0.0070 + (0.0100 - 0.0070) * (Tempmax - 280) / 100);
+          epsc0max = -(0.0050 + (0.006333 - 0.0050) * (Tempmax - 280) / 100);
           epscumax = -(0.0275 + 0.0025 * (Tempmax - 280) / 100);
       }
       else if (Tempmax <= 480) {
-          epsc0max = -(0.0100 + (0.0150 - 0.0100) * (Tempmax - 380) / 100);
+          //epsc0max = -(0.0100 + (0.0150 - 0.0100) * (Tempmax - 380) / 100);
+          epsc0max = -(0.006333 + (0.008667 - 0.006333) * (Tempmax - 380) / 100);
           epscumax = -(0.03 + 0.0025 * (Tempmax - 380) / 100);
       }
       else if (Tempmax <= 580) {
-          epsc0max = -(0.0150 + (0.0250 - 0.0150) * (Tempmax - 480) / 100);
+          //epsc0max = -(0.0150 + (0.0250 - 0.0150) * (Tempmax - 480) / 100);
+          epsc0max = -(0.008667 + (0.012667 - 0.008667) * (Tempmax - 480) / 100);
           epscumax = -(0.0325 + 0.0025 * (Tempmax - 480) / 100);
       }
       else if (Tempmax <= 680) {
-          epsc0max = -0.0250;
+          //epsc0max = -0.0250;
+          epsc0max = -(0.012667 + (0.013333 - 0.012667) * (Tempmax - 580) / 100);
           epscumax = -(0.035 + 0.0025 * (Tempmax - 580) / 100);
       }
       else if (Tempmax <= 780) {
-          epsc0max = -0.0250;
+          //epsc0max = -0.0250;
+          epsc0max = -(0.013333 + (0.014 - 0.013333) * (Temp - 680) / 100);
           epscumax = -(0.0375 + 0.0025 * (Tempmax - 680) / 100);
       }
       else if (Tempmax <= 880) {
-          epsc0max = -0.0250;
+          //epsc0max = -0.0250;
+          epsc0max = -(0.014 + (0.015 - 0.014) * (Temp - 780) / 100);
           epscumax = -(0.04 + 0.0025 * (Tempmax - 780) / 100);
       }
       else if (Tempmax <= 980) {
-          epsc0max = -0.0250;
+          //epsc0max = -0.0250;
+          epsc0max = -0.0150;
           epscumax = -(0.0425 + 0.0025 * (Tempmax - 880) / 100);
       }
       else if (Tempmax <= 1080) {
-          epsc0max = -0.0250;
+          //epsc0max = -0.0250;
+          epsc0max = -0.0150;
           epscumax = -(0.045 + 0.0025 * (Tempmax - 980) / 100);
       }
       else {
-          opserr << "the temperature is invalid\n";
+          //opserr << "the temperature is invalid\n";
+          // added by anand kumar to handle temperature greater than 1100 
+          //epsc0max = -0.0250;
+          epsc0max = -0.0150;
+          epscumax = -0.05;
+
       }
 
       //make eps0 = eps0max
@@ -828,65 +886,14 @@ DamagePlasticConcreteECTThermal::getElongTangent(double TempT, double& ET, doubl
 
       // Calculating epscu
       epscu = epsc0 + ((epscumax - epsc0max) * fc / fcmax);
-
+      
       ft = 0;
-
-      double eres = 0.0;
-      ThermalElong = 0.0;
-      // caculation of thermal elongation
-      if (Tempmax <= 1) {
-          ThermalElong = (Tempmax - 0) * 9.213e-6;
-      }
-      else if (Tempmax <= 680) {
-          ThermalElong = -1.8e-4 + 9e-6 * (Tempmax + 20) + 2.3e-11 * (Tempmax + 20) * (Tempmax + 20) * (Tempmax + 20);
-      }
-      else if (Tempmax <= 1180) {
-          ThermalElong = 14e-3;
-      }
-      else {
-          opserr << "the temperature is invalid\n";
-      }
-
-      // Make thermal elongation zero during the cooling phase
-      
-      if (Tempmax < 0) {
-          opserr << "max temperature cannot be less than zero " << " " << Tempmax << endln;
-      }
-      else if (Tempmax <= 280) {
-          //eres = (-0.00058 / 280) * Tempmax;
-          eres = 0;       
-      }
-      else if (Tempmax <= 380) {
-          //eres = -0.00058 + ((- 0.00029 + 0.00058) / 100)* (Tempmax - 280);
-          eres = 0;        
-      }
-      else if (Tempmax <= 580) {
-         // eres = -0.00029 + ((0.00171 + 0.00029) / 200) * (Tempmax - 380);
-          eres = 0 + ((0.00171 + 0) / 200) * (Tempmax - 380);          
-      }
-      else if (Tempmax <= 780) {
-          eres = 0.00171 + ((0.00329 - 0.00171) / 200) * (Tempmax - 580);          
-      }
-      else if (Tempmax <= 880) {
-          eres = 0.00329 + ((0.005 - 0.00329) / 100) * (Tempmax - 780);
-      }
-      else {
-          eres = 0.005;
-         
-      }
-      
-    // Elong = ThermalElong + ((eres - ThermalElong) / Tempmax) * (Tempmax - Temp) - epsLitsp;
-      //if (Elong < 0) {
-          //Elong = 0.0;
-       //}
-
   }
-
   return 0;
 }
 
 int 
-DamagePlasticConcreteECTThermal::commitState(void)
+DamagePlasticityConcreteECT::commitState(void)
 {
   ecminP = ecmin;
   deptP = dept;
@@ -899,15 +906,17 @@ DamagePlasticConcreteECTThermal::commitState(void)
   //epsLitsp = Eps_lits;
   Eps_litsP = Eps_lits;
 
-  e_resP = e_res; // AK added to keep track of residual strain.
+  e_resP = e_res; // Anand Kumar added to keep track of residual strain.
   dcP = dc;
+  DelTP = DelT;
+  //eptiP = epti;
 
   TmaxP = Tmax;
   return 0;
 }
 
 int 
-DamagePlasticConcreteECTThermal::revertToLastCommit(void)
+DamagePlasticityConcreteECT::revertToLastCommit(void)
 {
   ecmin = ecminP;
   dept = deptP;
@@ -917,9 +926,10 @@ DamagePlasticConcreteECTThermal::revertToLastCommit(void)
   eps = epsP;
   Eps_lits = Eps_litsP;
 
-  e_res = e_resP; // AK added to keep track of residual strain.
+  e_res = e_resP; // Anand Kumar added to keep track of residual strain.
   dc = dcP;
-
+  //dt = dtP;
+  DelT = DelTP;
   Temp = TempP; //PK add set the previous temperature
 
   // NA ELENXW MIPWS EDW XANETAI TO TEMP LOGW MIN CONVERGENCE
@@ -928,7 +938,7 @@ DamagePlasticConcreteECTThermal::revertToLastCommit(void)
 }
 
 int 
-DamagePlasticConcreteECTThermal::revertToStart(void)
+DamagePlasticityConcreteECT::revertToStart(void)
 {
   ecminP = 0.0;
   deptP = 0.0;
@@ -944,7 +954,7 @@ DamagePlasticConcreteECTThermal::revertToStart(void)
 }
 
 int 
-DamagePlasticConcreteECTThermal::sendSelf(int commitTag, Channel &theChannel)
+DamagePlasticityConcreteECT::sendSelf(int commitTag, Channel &theChannel)
 {
   static Vector data(13);
   data(0) =fc;    
@@ -962,21 +972,21 @@ DamagePlasticConcreteECTThermal::sendSelf(int commitTag, Channel &theChannel)
   data(12) = this->getTag();
 
   if (theChannel.sendVector(this->getDbTag(), commitTag, data) < 0) {
-    opserr << "DamagePlasticConcreteECTThermal::sendSelf() - failed to sendSelf\n";
+    opserr << "DamagePlasticityConcreteECT::sendSelf() - failed to sendSelf\n";
     return -1;
   }
   return 0;
 }
 
 int 
-DamagePlasticConcreteECTThermal::recvSelf(int commitTag, Channel &theChannel, 
+DamagePlasticityConcreteECT::recvSelf(int commitTag, Channel &theChannel, 
 	     FEM_ObjectBroker &theBroker)
 {
 
   static Vector data(13);
 
   if (theChannel.recvVector(this->getDbTag(), commitTag, data) < 0) {
-    opserr << "DamagePlasticConcreteECTThermal::recvSelf() - failed to recvSelf\n";
+    opserr << "DamagePlasticityConcreteECT::recvSelf() - failed to recvSelf\n";
     return -1;
   }
 
@@ -1002,13 +1012,13 @@ DamagePlasticConcreteECTThermal::recvSelf(int commitTag, Channel &theChannel,
 }
 
 void 
-DamagePlasticConcreteECTThermal::Print(OPS_Stream &s, int flag)
+DamagePlasticityConcreteECT::Print(OPS_Stream &s, int flag)
 {
-  s << "DamagePlasticConcreteECTThermal:(strain, stress, tangent) " << eps << " " << sig << " " << e << endln;
+  s << "DamagePlasticityConcreteECT:(strain, stress, tangent) " << eps << " " << sig << " " << e << endln;
 }
 
 void
-DamagePlasticConcreteECTThermal::Tens_Envlp (double epsc, double &sigc, double &Ect)
+DamagePlasticityConcreteECT::Tens_Envlp (double epsc, double &sigc, double &Ect)
 {
 /*-----------------------------------------------------------------------
 ! monotonic envelope of concrete in tension (positive envelope)
@@ -1046,7 +1056,7 @@ DamagePlasticConcreteECTThermal::Tens_Envlp (double epsc, double &sigc, double &
 
   
 void
-DamagePlasticConcreteECTThermal::Compr_Envlp (double epsc, double &sigc, double &Ect) 
+DamagePlasticityConcreteECT::Compr_Envlp (double epsc, double &sigc, double &Ect) 
 {
 /*-----------------------------------------------------------------------
 ! monotonic envelope of concrete in compression (negative envelope)
@@ -1092,7 +1102,7 @@ DamagePlasticConcreteECTThermal::Compr_Envlp (double epsc, double &sigc, double 
 }
 
 double
-DamagePlasticConcreteECTThermal::newton_raphson_(double Err, double e_res, double initial_guess, double tolerance, int max_iterations) {
+DamagePlasticityConcreteECT::newton_raphson_(double Err, double e_res, double initial_guess, double tolerance, int max_iterations) {
     double e = initial_guess;
     int iteration = 0;
     double el = 0.0;
@@ -1119,7 +1129,7 @@ DamagePlasticConcreteECTThermal::newton_raphson_(double Err, double e_res, doubl
 }
 
 void
-DamagePlasticConcreteECTThermal::Residual_(double ee, double& r, double& dr_de, double Err, double e_res) {
+DamagePlasticityConcreteECT::Residual_(double ee, double& r, double& dr_de, double Err, double e_res) {
     if (ee > epsc0) {
         double ratLocal = ee / epsc0;
         double ratSquare = ratLocal * ratLocal;
@@ -1146,7 +1156,7 @@ DamagePlasticConcreteECTThermal::Residual_(double ee, double& r, double& dr_de, 
 }
 
 int
-DamagePlasticConcreteECTThermal::getVariable(const char *varName, Information &theInfo)
+DamagePlasticityConcreteECT::getVariable(const char *varName, Information &theInfo)
 {
   if (strcmp(varName,"ec") == 0) {
     theInfo.theDouble = epsc0;
@@ -1189,8 +1199,144 @@ DamagePlasticConcreteECTThermal::getVariable(const char *varName, Information &t
 
 //this function is no use, just for the definiation of pure virtual function.
 int
-DamagePlasticConcreteECTThermal::setTrialStrain(double strain, double strainRate)
+DamagePlasticityConcreteECT::setTrialStrain(double strain, double strainRate)
 {
-  opserr << "DamagePlasticConcreteECTThermal::setTrialStrain(double strain, double strainRate) - should never be called\n";
+  opserr << "DamagePlasticityConcreteECT::setTrialStrain(double strain, double strainRate) - should never be called\n";
   return -1;
+}
+
+
+/* Methods added by Anand Kumar IITJ to record Creep, Mechanical and Thermal strain: */
+
+Response*
+DamagePlasticityConcreteECT::setResponse(const char** argv, int argc,
+    OPS_Stream& theOutput)
+{
+    Response* theResponse = 0;
+
+    theOutput.tag("UniaxialMaterialOutput");
+    theOutput.attr("matType", this->getClassType());
+    theOutput.attr("matTag", this->getTag());
+
+    // To record compression damage in concrete {Added by Anand Kumar IITJ}
+    if (strcmp(argv[0], "damageC") == 0) {
+        theOutput.tag("ResponseType", "dc");
+        theResponse = new MaterialResponse(this, 1, this->getDamageC());
+    }
+    // To record tension damage in concrete {Added by Anand Kumar IITJ}
+    else if (strcmp(argv[0], "damageT") == 0) {
+        theOutput.tag("ResponseType", "dt");
+        theResponse = new MaterialResponse(this, 2, this->getDamageT());
+    }
+
+    // Dummies: not required here
+    else if (strcmp(argv[0], "strain") == 0) {
+        theOutput.tag("ResponseType", "eps11");
+        theResponse = new MaterialResponse(this, 3, this->getStrain());
+    }
+
+    // Dummies: not required here
+    else if ((strcmp(argv[0], "stressStrain") == 0) ||
+        (strcmp(argv[0], "stressANDstrain") == 0) ||
+        (strcmp(argv[0], "stressAndStrain") == 0)) {
+        theOutput.tag("ResponseType", "sig11");
+        theOutput.tag("ResponseType", "eps11");
+        theResponse = new MaterialResponse(this, 4, Vector(2));
+    }
+     // Dummies: not required here
+    else if (strcmp(argv[0], "CreepStressStrainTangent") == 0) {
+        theOutput.tag("ResponseType", "Tstrain");
+        theOutput.tag("ResponseType", "LITS");
+        theResponse = new MaterialResponse(this, 6, Vector(2));
+    }
+    // Dummies: not required here
+    else if ((strcmp(argv[0], "stressStrainTangent") == 0) ||
+        (strcmp(argv[0], "stressANDstrainANDtangent") == 0)) {
+        theOutput.tag("ResponseType", "sig11");
+        theOutput.tag("ResponseType", "eps11");
+        theOutput.tag("ResponseType", "C11");
+        theResponse = new MaterialResponse(this, 5, Vector(3));
+    }
+
+    // stress sensitivity for local sensitivity recorder purpose.  Quan 2009
+    // limit:  no more than 10000 random variables/sensitivity parameters
+    else if (strstr(argv[0], "stressSensitivity") != 0) {
+        char* token = strtok((char*)argv[0], " ");
+        if (token != NULL) token = strtok(NULL, " ");
+        int gradient = atoi(token);
+        theOutput.tag("ResponseType", "sigsens11");
+        theResponse = new MaterialResponse(this, gradient + 10000, this->getStress());
+    }
+    // strain sensivitiy
+    else if (strstr(argv[0], "strainSensitivity") != 0) {
+        char* token = strtok((char*)argv[0], " ");
+        if (token != NULL) token = strtok(NULL, " ");
+        int gradient = atoi(token);
+        theOutput.tag("ResponseType", "epssens11");
+        theResponse = new MaterialResponse(this, gradient + 20000, this->getStrain());
+    }
+
+
+    theOutput.endTag();
+    return theResponse;
+
+}
+
+int
+DamagePlasticityConcreteECT::getResponse(int responseID, Information& matInfo)
+{
+    static Vector stressStrain(2);
+    static Vector stressStrainTangent(3);
+    static Vector CreepStressStrainTangent(2); //Added by AMK
+    // each subclass must implement its own stuff   
+
+    // added for sensitivity recorder. Quan 2009
+    if ((responseID > 10000) && (responseID < 20000)) {
+        matInfo.setDouble(this->getStressSensitivity(responseID - 10000, false));
+        return 0;
+    }
+    else if (responseID > 20000) {
+        matInfo.setDouble(this->getStrainSensitivity(responseID - 20000));
+        return 0;
+    }
+
+    switch (responseID) {
+    case 1:
+        matInfo.setDouble(this->getDamageC());
+        return 0;
+
+    case 2:
+        matInfo.setDouble(this->getDamageT());
+        return 0;
+
+    case 3:
+        matInfo.setDouble(this->getStrain());
+        return 0;
+
+    case 4:
+        stressStrain(0) = this->getStress();
+        stressStrain(1) = this->getStrain();
+        matInfo.setVector(stressStrain);
+        return 0;
+
+    case 5:
+        stressStrainTangent(0) = this->getStress();
+        stressStrainTangent(1) = this->getStrain();
+        stressStrainTangent(2) = this->getTangent();
+        matInfo.setVector(stressStrainTangent);
+        return 0;
+
+    case 6:
+        //CreepStressStrainTangent(0) = this->getStress();
+        //CreepStressStrainTangent(1) = this->getStrain();
+        //CreepStressStrainTangent(2) = this->getTangent();
+        CreepStressStrainTangent(0) = this->getTstrain();
+        CreepStressStrainTangent(1) = this->getLITS();
+        //CreepStressStrainTangent(5) = this->getShrink();
+        matInfo.setVector(CreepStressStrainTangent);
+        return 0;
+
+    default:
+        return -1;
+    }
 }

@@ -114,8 +114,7 @@ ConcreteECThermal::ConcreteECThermal(int tag, double _fc, double _epsc0, double 
 
   cooling=0; //PK add
   TempP = 0.0; //Pk add previous temp
-  Tmax = 0.0;
-  epsLitsp = 0.0; // AK add transient strain
+
 }
 
 ConcreteECThermal::ConcreteECThermal(void):
@@ -149,8 +148,8 @@ ConcreteECThermal::getInitialTangent(void)
 int
 ConcreteECThermal::setTrialStrain(double trialStrain, double FiberTemperature, double strainRate)
 {
-   double 	ec0 = fc * 2. / epsc0;//?
-   //double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
+ // double 	ec0 = fc * 2. / epsc0;//?
+   double 	ec0 = fc * 1.5 / epsc0; //JZ. 27/07/10 ??
   
   // retrieve concrete hitory variables
   
@@ -277,9 +276,11 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
   Temp = TempT;  //make up the 20 degree which is minus in the class of thermalfield
   Tempmax = TempTmax; //PK add max temp for cooling
   // The datas are from EN 1992 part 1-2-1 
-  // Tensile strength at elevated temperature  
-  double DelT = 0.0;
-
+  // Tensile strength at elevated temperature
+	
+   //if (Temp >= 1080) {
+  //	  opserr << "temperature " << " " << Temp <<endln;
+  //}
   if (Temp <= 80) {
 	  ft = ftT;
   }
@@ -372,7 +373,7 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
 	  epscu = -(0.045 + 0.0025*(Temp - 980)/100);
   }
   else  {
-      opserr << "the temperature is invalid\n";
+      opserr << "the temperature is invalid\n"; 
   }
 //jz assign a miner to the valuables
 
@@ -393,235 +394,17 @@ ConcreteECThermal::getElongTangent(double TempT, double& ET, double& Elong, doub
 	  opserr << "the temperature is invalid\n";
   }
 
-  ET = 2*fc/epsc0; 
+  ET = 1.5*fc/epsc0; 
   Elong = ThermalElongation;
- 
-  DelT = Temp - TempP;
-  if (DelT > 1.0) {
-      Tmax = Temp;
-  }
 
-  ///PK COOLING PART FOR DESCENDING BRANCH OF A FIRE//// 
-  /// If temperature is less that previous commited temp then we have cooling taking place
-  if ((Temp - TempP) < -1.0) {
-      Tempmax = TmaxP;
-      //opserr << "cooling " << Temp << " " << TempP <<" " << TmaxP << endln;
-     // opserr << "epsLitsp= " << epsLitsp << endln;
-
-      double kappa;
-      double fcmax; //compr strength at max temp
-      double fcumax; //ultimate compr strength at max temp
-      double fcamb; //compr strength at cooled ambient temp
-      double fcuamb; //ultimate compr strength at cooled ambient temp
-      double epsc0max; //strain at compression strength for the max temp
-      double epscumax; //ultimate strain at ultimate compression strength for the max temp
-      if (TempP == Tempmax) {
-          //opserr << "cooling,T,TP,Tmax " << Temp << " " << TempP << " " << Tempmax <<endln;
-      }
-      // PK Determine residual compressive strength of concrete heated to the max temp and then having cooled down to ambient
-      // This will be the same for all the timesteps during the cooling phase
-      // PK 1st step is to determine Kc,Tempmax according to table in 3.2.2 (EN1994-1-2:2005)
-      
-      if (Tempmax < 0) {
-          opserr << "max temperature cannot be less than zero9 " << " " << Tempmax << endln;
-      }
-      else if (Tempmax <= 80) {
-          kappa = 1;
-          fcmax = fcT;
-          fcumax = fcuT;
-      }
-      else if (Tempmax <= 180) {
-          kappa = 1 - (Tempmax - 80) * 0.05 / 100;
-          fcmax = fcT * (1 - (Tempmax - 80) * 0.05 / 100);
-          fcumax = fcuT * (1 - (Tempmax - 80) * 0.05 / 100);
-      }
-      else if (Tempmax <= 280) {
-          kappa = 0.95 - (Tempmax - 180) * 0.1 / 100;
-          fcmax = fcT * (0.95 - (Tempmax - 180) * 0.1 / 100);
-          fcumax = fcuT * (0.95 - (Tempmax - 180) * 0.1 / 100);
-      }
-      else if (Tempmax <= 380) {
-          kappa = 0.85 - (Tempmax - 280) * 0.1 / 100;
-          fcmax = fcT * (0.85 - (Tempmax - 280) * 0.1 / 100);
-          fcumax = fcuT * (0.85 - (Tempmax - 280) * 0.1 / 100);
-      }
-      else if (Tempmax <= 480) {
-          kappa = 0.75 - (Tempmax - 380) * 0.15 / 100;
-          fcmax = fcT * (0.75 - (Tempmax - 380) * 0.15 / 100);
-          fcumax = fcuT * (0.75 - (Tempmax - 380) * 0.15 / 100);
-      }
-      else if (Tempmax <= 580) {
-          kappa = 0.60 - (Tempmax - 480) * 0.15 / 100;
-          fcmax = fcT * (0.60 - (Tempmax - 480) * 0.15 / 100);
-          fcumax = fcuT * (0.60 - (Tempmax - 480) * 0.15 / 100);
-      }
-      else if (Tempmax <= 680) {
-          kappa = 0.45 - (Tempmax - 580) * 0.15 / 100;
-          fcmax = fcT * (0.45 - (Tempmax - 580) * 0.15 / 100);
-          fcumax = fcuT * (0.45 - (Tempmax - 580) * 0.15 / 100);
-      }
-      else if (Tempmax <= 780) {
-          kappa = 0.30 - (Tempmax - 680) * 0.15 / 100;
-          fcmax = fcT * (0.30 - (Tempmax - 680) * 0.15 / 100);
-          fcumax = fcuT * (0.30 - (Tempmax - 680) * 0.15 / 100);
-      }
-      else if (Tempmax <= 880) {
-          kappa = 0.15 - (Tempmax - 780) * 0.07 / 100;
-          fcmax = fcT * (0.15 - (Tempmax - 780) * 0.07 / 100);
-          fcumax = fcuT * (0.15 - (Tempmax - 780) * 0.07 / 100);
-      }
-      else if (Tempmax <= 980) {
-          kappa = 0.08 - (Tempmax - 880) * 0.04 / 100;
-          fcmax = fcT * (0.08 - (Tempmax - 880) * 0.04 / 100);
-          fcumax = fcuT * (0.08 - (Tempmax - 880) * 0.04 / 100);
-      }
-      else if (Tempmax <= 1080) {
-          kappa = 0.04 - (Tempmax - 980) * 0.03 / 100;
-          fcmax = fcT * (0.04 - (Tempmax - 980) * 0.03 / 100);
-          fcumax = fcuT * (0.04 - (Tempmax - 980) * 0.03 / 100);
-      }
-      else {
-          opserr << "the temperature is invalid\n";
-      }
-      // PK 2nd step is to determine compressive strength at ambient after cooling as shown in ANNEX C (EN1994-1-2:2005)  
-      if (Tempmax < 0) {
-          opserr << "max temperature cannot be less than zero7 " << " " << Tempmax << endln;
-      }
-      else if (Tempmax <= 80) {
-          fcamb = kappa * fcT;
-          fcuamb = kappa * fcuT;
-      }
-      else if (Tempmax <= 280) {
-          fcamb = (1 - (0.235 * (Tempmax - 80) / 200)) * fcT;
-          fcuamb = (1 - (0.235 * (Tempmax - 80) / 200)) * fcuT;
-      }
-      else if (Tempmax <= 1080) {
-          fcamb = 0.9 * kappa * fcT;
-          fcuamb = 0.9 * kappa * fcuT;
-      }
-      else {
-          opserr << "the temperature is invalid\n";
-      }
-
-      // Calculation of current compressive strength
-      // linear interpolation between ambient and maximum compressive strength (after and before cooling)
-
-      fc = fcmax - ((fcmax - fcamb) * (Tempmax - Temp) / Tempmax);
-      fcu = fcumax - ((fcumax - fcuamb) * (Tempmax - Temp) / Tempmax);
-
-      // Calculation of epsc0 for Tempmax and then keep it the same for all next time steps
-      if (Tempmax < 0) {
-          opserr << "max temperature cannot be less than zero5 " << " " << Tempmax << endln;
-      }
-      else if (Tempmax <= 80) {
-          epsc0max = -(0.0025 + (0.004 - 0.0025) * (Tempmax - 0) / (80 - 0));
-          epscumax = -(0.0200 + (0.0225 - 0.0200) * (Tempmax - 0) / (80 - 0));
-      }
-      else if (Tempmax <= 180) {
-          epsc0max = -(0.0040 + (0.0055 - 0.0040) * (Tempmax - 80) / 100);
-          epscumax = -(0.0225 + (0.0225 - 0.0200) * (Tempmax - 80) / 100);
-      }
-      else if (Tempmax <= 280) {
-          epsc0max = -(0.0055 + (0.0070 - 0.0055) * (Tempmax - 180) / 100);
-          epscumax = -(0.0250 + 0.0025 * (Tempmax - 180) / 100);
-      }
-      else if (Tempmax <= 380) {
-          epsc0max = -(0.0070 + (0.0100 - 0.0070) * (Tempmax - 280) / 100);
-          epscumax = -(0.0275 + 0.0025 * (Tempmax - 280) / 100);
-      }
-      else if (Tempmax <= 480) {
-          epsc0max = -(0.0100 + (0.0150 - 0.0100) * (Tempmax - 380) / 100);
-          epscumax = -(0.03 + 0.0025 * (Tempmax - 380) / 100);
-      }
-      else if (Tempmax <= 580) {
-          epsc0max = -(0.0150 + (0.0250 - 0.0150) * (Tempmax - 480) / 100);
-          epscumax = -(0.0325 + 0.0025 * (Tempmax - 480) / 100);
-      }
-      else if (Tempmax <= 680) {
-          epsc0max = -0.0250;
-          epscumax = -(0.035 + 0.0025 * (Tempmax - 580) / 100);
-      }
-      else if (Tempmax <= 780) {
-          epsc0max = -0.0250;
-          epscumax = -(0.0375 + 0.0025 * (Tempmax - 680) / 100);
-      }
-      else if (Tempmax <= 880) {
-          epsc0max = -0.0250;
-          epscumax = -(0.04 + 0.0025 * (Tempmax - 780) / 100);
-      }
-      else if (Tempmax <= 980) {
-          epsc0max = -0.0250;
-          epscumax = -(0.0425 + 0.0025 * (Tempmax - 880) / 100);
-      }
-      else if (Tempmax <= 1080) {
-          epsc0max = -0.0250;
-          epscumax = -(0.045 + 0.0025 * (Tempmax - 980) / 100);
-      }
-      else {
-          opserr << "the temperature is invalid\n";
-      }
-
-      //make eps0 = eps0max
-
-      epsc0 = epsc0max;
-
-      // Calculating epscu
-      epscu = epsc0 + ((epscumax - epsc0max) * fc / fcmax);
-
-      ft = 0;
-      
-      double eres = 0.0;
-      ThermalElong = 0.0;
-      // caculation of thermal elongation
-      if (Tempmax <= 1) {
-          ThermalElong = (Tempmax - 0) * 9.213e-6;
-      }
-      else if (Tempmax <= 680) {
-          ThermalElong = -1.8e-4 + 9e-6 * (Tempmax + 20) + 2.3e-11 * (Tempmax + 20) * (Tempmax + 20) * (Tempmax + 20);
-      }
-      else if (Tempmax <= 1180) {
-          ThermalElong = 14e-3;
-      }
-      else {
-          opserr << "the temperature is invalid\n";
-      }
-
-      // Make thermal elongation zero during the cooling phase
-
-      if (Tempmax < 0) {
-          opserr << "max temperature cannot be less than zero1 " << " " << Tempmax << endln;
-      }
-      else if (Tempmax <= 280) {
-          //eres = (-0.00058 / 280) * Tempmax;
-          eres = 0;
-      }
-      else if (Tempmax <= 380) {
-          //eres = -0.00058 + ((- 0.00029 + 0.00058) / 100)* (Tempmax - 280);
-          eres = 0;
-      }
-      else if (Tempmax <= 580) {
-          // eres = -0.00029 + ((0.00171 + 0.00029) / 200) * (Tempmax - 380);
-          eres = 0 + ((0.00171 + 0) / 200) * (Tempmax - 380);
-      }
-      else if (Tempmax <= 780) {
-          eres = 0.00171 + ((0.00329 - 0.00171) / 200) * (Tempmax - 580);
-      }
-      else if (Tempmax <= 880) {
-          eres = 0.00329 + ((0.005 - 0.00329) / 100) * (Tempmax - 780);
-      }
-      else {
-          eres = 0.005;
-
-      }
-
-      //Elong = ThermalElong + ((eres - ThermalElong) / Tempmax) * (Tempmax - Temp) ;
-      //if (Elong < 0) {
-          //Elong = 0.0;
-       //}
-  }
 
   return 0;
 }
+
+
+
+
+
 
 int 
 ConcreteECThermal::commitState(void)
@@ -634,7 +417,7 @@ ConcreteECThermal::commitState(void)
   epsP = eps;
 
   TempP = Temp; //PK add set the previous temperature
-  TmaxP = Tmax;
+
   return 0;
 }
 
@@ -649,7 +432,7 @@ ConcreteECThermal::revertToLastCommit(void)
   eps = epsP;
 
   //Temp = TempP; //PK add set the previous temperature
-  
+
   // NA ELENXW MIPWS EDW XANETAI TO TEMP LOGW MIN CONVERGENCE
 
   return 0;
@@ -661,12 +444,12 @@ ConcreteECThermal::revertToStart(void)
   ecminP = 0.0;
   deptP = 0.0;
 
-  eP = 2 * fc/epsc0;
+  eP = 2.0*fc/epsc0;
   epsP = 0.0;
   sigP = 0.0;
   eps = 0.0;
   sig = 0.0;
-  e = 2 * fc/epsc0;
+  e = 2.0*fc/epsc0;
 
   return 0;
 }
@@ -752,8 +535,8 @@ ConcreteECThermal::Tens_Envlp (double epsc, double &sigc, double &Ect)
 !    Ect  = tangent concrete modulus
 !-----------------------------------------------------------------------*/
   
-  double Ec0  = 2.0*fc/epsc0;
-  //double Ec0  = 1.5*fc/epsc0;
+ // double Ec0  = 2.0*fc/epsc0;
+  double Ec0  = 1.5*fc/epsc0;
 
   double eps0 = ft/Ec0;
   double epsu = ft*(1.0/Ets+1.0/Ec0);

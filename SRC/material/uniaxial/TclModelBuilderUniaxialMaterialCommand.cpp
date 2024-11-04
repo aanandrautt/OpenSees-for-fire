@@ -126,10 +126,9 @@ extern void *OPS_Concrete02Thermal(void);
 extern void *OPS_StainlessECThermal(void); // L.Jiang [SIF]
 extern void *OPS_SteelECThermal(void); // L.Jiang [SIF]
 extern void *OPS_ConcreteECThermal(void);// L.Jiang [SIF]
-extern void *OPS_ConcreteECTThermal(void);// Anand Kumar
-extern void* OPS_SteelDPM(void); //Anand Kumar
-extern void* OPS_SteelDPM1(void); //Anand Kumar
-extern void* OPS_DamagePlasticConcreteECTThermal(void); //Anand Kumar
+extern void* OPS_DPMsteelEC(void); //Anand Kumar
+extern void* OPS_DamagePlasticityConcreteECT(void); //Anand Kumar
+extern void* OPS_ElasticMaterialThermal2(void); //Anand Kumar
 extern void *OPS_ElasticMaterialThermal(void); //L.Jiang[SIF]
 extern void* OPS_JointEPMaterial(void); //L.Jiang[SIF]
 
@@ -601,32 +600,25 @@ TclModelBuilderUniaxialMaterialCommand (ClientData clientData, Tcl_Interp *inter
 		else
 			return TCL_ERROR;
     } 
-    else if (strcmp(argv[1], "ConcreteECTThermal") == 0) {
-        void* theMat = OPS_ConcreteECTThermal();
+    
+    else if (strcmp(argv[1], "DPMsteelEC") == 0) {
+        void* theMat = OPS_DPMsteelEC();
         if (theMat != 0)
             theMaterial = (UniaxialMaterial*)theMat;
         else
             return TCL_ERROR;
         // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
     }
-    else if (strcmp(argv[1], "SteelDPM") == 0) {
-        void* theMat = OPS_SteelDPM();
-        if (theMat != 0)
-            theMaterial = (UniaxialMaterial*)theMat;
-        else
-            return TCL_ERROR;
-        // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
-    }
-    else if (strcmp(argv[1], "SteelDPM1") == 0) {
-        void* theMat = OPS_SteelDPM1();
-        if (theMat != 0)
-            theMaterial = (UniaxialMaterial*)theMat;
-        else
-            return TCL_ERROR;
-        // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
-    }
-    else if (strcmp(argv[1], "DamagePlasticConcreteECTThermal") == 0) {
-        void* theMat = OPS_DamagePlasticConcreteECTThermal();
+    else if (strcmp(argv[1], "DamagePlasticityConcreteECT") == 0) {
+            void* theMat = OPS_DamagePlasticityConcreteECT();
+            if (theMat != 0)
+                theMaterial = (UniaxialMaterial*)theMat;
+            else
+                return TCL_ERROR;
+            // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
+        }
+    else if (strcmp(argv[1], "ElasticMaterialThermal2") == 0) {
+        void* theMat = OPS_ElasticMaterialThermal2();
         if (theMat != 0)
             theMaterial = (UniaxialMaterial*)theMat;
         else

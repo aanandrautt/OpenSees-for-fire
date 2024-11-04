@@ -77,9 +77,6 @@ OPS_SteelECThermal(void)
 	  else if (strcmp(typeChar, "EC2X") ==0 ||strcmp(typeChar, "EC2x") ==0) {
 		  iData[1]=23;
 		  }
-	  else if (strcmp(typeChar, "Aluminum") == 0 || strcmp(typeChar, "aluminum") == 0) {
-		  iData[1] = 6;
-	  }
 	  else{
 		  opserr << "WARNING invalid material type for uniaxialMaterial SteelECThermal "<<iData[0]<<endln;
 		  return 0;
@@ -402,60 +399,13 @@ SteelECThermal::getThermalElongation(void)
   return ThermalElongation;
 }
 
-double linearly_interpolate(double x, double x_initial, double x_final, double y_initial, double y_final)
-{
-	/**
-	* Linearly interpolates the value of y for a given x, given the x and y pairs for preceding and 
-	* following points on the interpolated line.
-	* Added by Mhd Anwar Orabi 2022
-	*/
-	return y_initial + (x - x_initial) * (y_final - y_initial) / (x_final - x_initial);
-}
-
-
 //Liming for updating the reduction factors////////////start
 double 
 SteelECThermal::getElongTangent(double TempT, double &ET, double &Elong, double TempTmax) 
 {
 	if(TempT<-100||TempT>1200)
 		opserr<< "WARNING SteelECThermal received an invalid temperature: " << TempT<< endln;
-	if (typeTag == 6)
-	{
-		// typeTag = 6: EN 1999-1-2:2007 Design of aluminum structures.
-		// proof strength factors for Aluminum EN AW-6061 T6 from Table 1a, and modulus of elasticity for all grades from Table 2
-		// Added by Mhd Anwar Orabi 2022
-		double temperature_limits[11] = {0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 550.0, 1200.0};
-		// using a factor of 1.0e-3 in stead of 0 for factors at 550 C and above to avoid unnecessary numerical errors
-		double fp_factors[11] = {1.0, 0.98, 0.95, 0.91, 0.79, 0.55, 0.31, 0.1, 0.075, 1.0e-2, 1.0e-2};
-		double E0_factors[11] = { 1.0, 0.99, 0.97, 0.93, 0.86, 0.78, 0.68, 0.54, 0.357, 1.0e-2, 1.0e-2};
-		for (int i = 0; i < 10; i++)
-		{
-			if (TempT <= temperature_limits[i])
-			{
-				double k_f = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], fp_factors[i], fp_factors[i + 1]);
-				double k_E = linearly_interpolate(TempT + 20.0, temperature_limits[i], temperature_limits[i + 1], E0_factors[i], E0_factors[i + 1]);
-				fy = fyT * k_f;
-				fp = fyT * k_f;
-				E0 = E0T * k_E;
-				break;
-			}
 
-		}
-
-		// caculation of thermal elongation of aluminum following clause 3.3.1.1 from the EN 1999-1-2
-		if (TempT <= 500) {
-			ThermalElongation = (TempT + 20) * (TempT + 20) * 0.1e-7 + (TempT + 20) * 22.5e-6 - 4.5e-4;
-		}
-		else if (TempT > 500) {
-			ThermalElongation = 0.0133;
-		}
-		else {
-			opserr << " SteelEC Temperature " << TempT << " is invalid\n";
-			return -1;
-		}
-	}
-	else 
-	{
 	double FyRfactors[12];
 	double FpRfactors[12];
 	double E0Rfactors[12];
@@ -509,50 +459,48 @@ SteelECThermal::getElongTangent(double TempT, double &ET, double &Elong, double 
 		opserr<<"WARNING SteelECThermal received an invalid typeTag: "<<typeTag<<endln;
 
    //Now Updating modulus, strengths
-	for (int i = 0; i < 13; i++) {
-		if (TempT <= 80 + 100 * i)
+	for( int i=0; i<13; i++) {
+		if (TempT <= 80+100*i) 
 		{
-			if (i == 0) {
-				fy = fyT * (1.0 - TempT * (1.0 - FyRfactors[0]) / 80);
-				fp = fyT * (1.0 - TempT * (1.0 - FpRfactors[0]) / 80);
-				E0 = E0T * (1.0 - TempT * (1.0 - E0Rfactors[0]) / 80);
+			if (i==0) {
+				fy = fyT*(1.0 - TempT*(1.0-FyRfactors[0])/80);
+				fp = fyT*(1.0 - TempT*(1.0-FpRfactors[0])/80);
+				E0 = E0T*(1.0 - TempT*(1.0-E0Rfactors[0])/80);
 			}
-			else if (i == 12) {
-				opserr << "Warning:The temperature " << TempT << " for SteelECthermal is out of range\n";
+			else if (i==12) {
+				opserr << "Warning:The temperature "<<TempT<<" for SteelECthermal is out of range\n"; 
 				return -1;
 			}
 			else {
-				fy = fyT * (FyRfactors[i - 1] - (TempT + 20 - 100 * i) * (FyRfactors[i - 1] - FyRfactors[i]) / 100);
-				fp = fyT * (FpRfactors[i - 1] - (TempT + 20 - 100 * i) * (FpRfactors[i - 1] - FpRfactors[i]) / 100);
-				E0 = E0T * (E0Rfactors[i - 1] - (TempT + 20 - 100 * i) * (E0Rfactors[i - 1] - E0Rfactors[i]) / 100);
+				fy = fyT*(FyRfactors[i-1] - (TempT+20-100*i)*(FyRfactors[i-1]-FyRfactors[i])/100);
+				fp = fyT*(FpRfactors[i-1] - (TempT+20-100*i)*(FpRfactors[i-1]-FpRfactors[i])/100);
+				E0 = E0T*(E0Rfactors[i-1] - (TempT+20-100*i)*(E0Rfactors[i-1]-E0Rfactors[i])/100);
 			}
 			break;
-			}
 		}
-	
-	// caculation of thermal elongation of reinforcing steel. JZ
-	if (TempT <= 1) {
-		ThermalElongation = TempT * 1.2164e-5;
-	}
-	else if (TempT <= 730) {
-		ThermalElongation = -2.416e-4 + 1.2e-5 * (TempT + 20) + 0.4e-8 * (TempT + 20) * (TempT + 20);
-	}
-	else if (TempT <= 840) {
-		ThermalElongation = 11e-3;
-}
-	else if (TempT <= 1180) {
-		ThermalElongation = -6.2e-3 + 2e-5 * (TempT + 20);
-	}
-	else {
-		opserr << " SteelEC Temperature " << TempT << " is invalid\n";
-		return -1;
-	}
 	}
 #ifdef _BDEBUG
 	//opserr<<", TempT:"<<TempT<< " fy: "<< fy<< " fp: "<< fp <<" E0T:  "<< E0<<endln;
 #endif
 
-
+  // caculation of thermal elongation of reinforcing steel. JZ
+///*	
+	if (TempT <= 1) {
+		  ThermalElongation = TempT * 1.2164e-5;
+	  }
+  else if (TempT <= 730) {
+      ThermalElongation = -2.416e-4 + 1.2e-5 *(TempT+20) + 0.4e-8 *(TempT+20)*(TempT+20);
+  }
+  else if (TempT <= 840) {
+      ThermalElongation = 11e-3; 
+  }
+  else if (TempT <= 1180) {
+      ThermalElongation = -6.2e-3 + 2e-5*(TempT+20);
+  }
+  else {
+	  opserr << " SteelEC Temperature "<< TempT<<" is invalid\n";
+	  return -1;
+  }
 
   //ThermalElongation = 0 ;   //debug  Liming
   Elong = ThermalElongation;

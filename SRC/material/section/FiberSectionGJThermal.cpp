@@ -1040,62 +1040,62 @@ FiberSectionGJThermal::setZaxis(bool z_Axis)
 }
 
 double  
-FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double fiberLocy, double fiberLocz) 
+FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double fiberLocy, double fiberLocz)
 {
-	double FiberTemperature = 0;
-	if(DataMixed.Size()==18){
-	//--------------if temperature Data has 18 elements--------------------
-		if ( fabs(DataMixed(1)) <= 1e-10 && fabs(DataMixed(17)) <= 1e-10 ) //no tempe load
-		{
-			return 0 ;
-		}
-		
-		double dataTempe[18]; //PK changed 18 to 27 to pass max temps
-		for (int i = 0; i < 18; i++) { 
-			dataTempe[i] = DataMixed(i);
-		}
+    double FiberTemperature = 0;
+    if (DataMixed.Size() == 18) {
+        //--------------if temperature Data has 18 elements--------------------
+        if (fabs(DataMixed(1)) <= 1e-10 && fabs(DataMixed(17)) <= 1e-10) //no tempe load
+        {
+            return 0;
+        }
 
-		if (  fiberLocy <= dataTempe[1])
-		{
-			opserr <<"FiberSectionGJThermal "<<this->getTag()<<":: fiber locy "<< fiberLocy <<" is out of the section below "<< dataTempe[1]<<endln;
-		}
-		else if (fiberLocy <= dataTempe[3])
-		{
-			FiberTemperature = dataTempe[0] - (dataTempe[1] - fiberLocy) * (dataTempe[0] - dataTempe[2])/(dataTempe[1] - dataTempe[3]);
-		}
-		else if (   fiberLocy <= dataTempe[5] )
-		{
-			FiberTemperature = dataTempe[2] - (dataTempe[3] - fiberLocy) * (dataTempe[2] - dataTempe[4])/(dataTempe[3] - dataTempe[5]);
-		}
-		else if ( fiberLocy <= dataTempe[7] )
-		{
-			FiberTemperature = dataTempe[4] - (dataTempe[5] - fiberLocy) * (dataTempe[4] - dataTempe[6])/(dataTempe[5] - dataTempe[7]);
-		}
-		else if ( fiberLocy <= dataTempe[9] )
-		{
-			FiberTemperature = dataTempe[6] - (dataTempe[7] - fiberLocy) * (dataTempe[6] - dataTempe[8])/(dataTempe[7] - dataTempe[9]);
-		}
-		else if (fiberLocy <= dataTempe[11] )
-		{
-			FiberTemperature = dataTempe[8] - (dataTempe[9] - fiberLocy) * (dataTempe[8] - dataTempe[10])/(dataTempe[9] - dataTempe[11]);
-		}
-		else if (fiberLocy <= dataTempe[13] )
-		{
-			FiberTemperature = dataTempe[10] - (dataTempe[11] - fiberLocy) * (dataTempe[10] - dataTempe[12])/(dataTempe[11] - dataTempe[13]);
-		}
-		else if (fiberLocy <= dataTempe[15] )
-		{
-			FiberTemperature = dataTempe[12] - (dataTempe[13] - fiberLocy) * (dataTempe[12] - dataTempe[14])/(dataTempe[13] - dataTempe[15]);
-		}
-		else if ( fiberLocy <= dataTempe[17] )
-		{
-			FiberTemperature = dataTempe[14] - (dataTempe[15] - fiberLocy) * (dataTempe[14] - dataTempe[16])/(dataTempe[15] - dataTempe[17]);
-		}
-		else 
-		{
-			opserr <<"FiberSectionGJThermal " << this->getTag() << " :: fiber loc " <<fiberLocy<<" is out of the section over" << dataTempe[17] << endln;
-		}
-	}
+        double dataTempe[18]; //PK changed 18 to 27 to pass max temps
+        for (int i = 0; i < 18; i++) {
+            dataTempe[i] = DataMixed(i);
+        }
+
+        if (fiberLocy <= dataTempe[1])
+        {
+            opserr << "FiberSectionGJThermal " << this->getTag() << ":: fiber locy " << fiberLocy << " is out of the section below " << dataTempe[1] << endln;
+        }
+        else if (fiberLocy <= dataTempe[3])
+        {
+            FiberTemperature = dataTempe[0] - (dataTempe[1] - fiberLocy) * (dataTempe[0] - dataTempe[2]) / (dataTempe[1] - dataTempe[3]);
+        }
+        else if (fiberLocy <= dataTempe[5])
+        {
+            FiberTemperature = dataTempe[2] - (dataTempe[3] - fiberLocy) * (dataTempe[2] - dataTempe[4]) / (dataTempe[3] - dataTempe[5]);
+        }
+        else if (fiberLocy <= dataTempe[7])
+        {
+            FiberTemperature = dataTempe[4] - (dataTempe[5] - fiberLocy) * (dataTempe[4] - dataTempe[6]) / (dataTempe[5] - dataTempe[7]);
+        }
+        else if (fiberLocy <= dataTempe[9])
+        {
+            FiberTemperature = dataTempe[6] - (dataTempe[7] - fiberLocy) * (dataTempe[6] - dataTempe[8]) / (dataTempe[7] - dataTempe[9]);
+        }
+        else if (fiberLocy <= dataTempe[11])
+        {
+            FiberTemperature = dataTempe[8] - (dataTempe[9] - fiberLocy) * (dataTempe[8] - dataTempe[10]) / (dataTempe[9] - dataTempe[11]);
+        }
+        else if (fiberLocy <= dataTempe[13])
+        {
+            FiberTemperature = dataTempe[10] - (dataTempe[11] - fiberLocy) * (dataTempe[10] - dataTempe[12]) / (dataTempe[11] - dataTempe[13]);
+        }
+        else if (fiberLocy <= dataTempe[15])
+        {
+            FiberTemperature = dataTempe[12] - (dataTempe[13] - fiberLocy) * (dataTempe[12] - dataTempe[14]) / (dataTempe[13] - dataTempe[15]);
+        }
+        else if (fiberLocy <= dataTempe[17])
+        {
+            FiberTemperature = dataTempe[14] - (dataTempe[15] - fiberLocy) * (dataTempe[14] - dataTempe[16]) / (dataTempe[15] - dataTempe[17]);
+        }
+        else
+        {
+            opserr << "FiberSectionGJThermal " << this->getTag() << " :: fiber loc " << fiberLocy << " is out of the section over" << dataTempe[17] << endln;
+        }
+    }
     else if (DataMixed.Size() == 25) {
         //---------------if temperature Data has 25 elements--------------------
 
@@ -1247,7 +1247,7 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[19]) <= 1e-10 && fabs(dataTempe[399]) <= 1e-10 && fabs(dataTempe[380]) <= 1e-10 && fabs(dataTempe[190]) <= 1e-10) //no tempe load
         {
             return 0;
-        }       
+        }
         //Check if we are out of bounds anywhere
         if (fiberLocy < dataTempe[400])
         {
@@ -1272,14 +1272,14 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
                         double Tzi_1 = dataTempe[i + 20 * j - 21] + (fiberLocy - dataTempe[j + 400 - 1]) * (dataTempe[i + 20 * j - 1] - dataTempe[i + 20 * j - 21]) / (dataTempe[j + 400] - dataTempe[j + 400 - 1]);
                         // interpolate across Z = Zi:
                         double Tzi = dataTempe[i + 20 * j - 20] + (fiberLocy - dataTempe[j + 400 - 1]) * (dataTempe[i + 20 * j] - dataTempe[i + 20 * j - 20]) / (dataTempe[j + 400] - dataTempe[j + 400 - 1]);
-                        // interpolate across Y = fiberLocy:
+                        // interpolate across Y = fiberLocy:                        
                         return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + 420 - 1]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + 420] - dataTempe[i + 420 - 1]);
                     }
                 }
-            }           
-        }       
+            }
+        }
     }
-    
+
     // added by Anand Kumar 2023
     else if (DataMixed.Size() == ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2)) {
         //---------------if temperature Data has (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + NumFib_z + 2) elements--------------------
@@ -1289,44 +1289,57 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
             dataTempe[i] = DataMixed(i);
         }
 
-        /*if (fabs(dataTempe[0]) <= 1e-10 && fabs(dataTempe[NumFib_z]) <= 1e-10 && fabs(dataTempe[(NumFib_y + 1) * (NumFib_z + 1) - 1]) <= 1e-10 && fabs(dataTempe[(NumFib_y + 1) * (NumFib_z + 1) - NumFib_z]) <= 1e-10 ) //no tempe load
-        {
-            return 0;
-        }*/      
-        //Check if we are out of bounds anywhere
-        /*if (fiberLocy < dataTempe[(NumFib_y + 1) * (NumFib_z + 1)])
-        {
-            opserr << "WARNING: Fiber location locy: " << fiberLocy << " below minimum Y " << dataTempe[400] << " of the defined thermal load area." << endln;
-        }
-        else if (fiberLocy > dataTempe[419]) {
-            opserr << "WARNING: Fiber location locy: " << fiberLocy << " above maximum Y " << dataTempe[419] << " of the defined thermal load area." << endln;
-
-        }
-        else if (fiberLocz < dataTempe[420]) {
-            opserr << "WARNING: Fiber location locz: " << fiberLocz << " below minimum Z " << dataTempe[420] << " of the defined thermal load area." << endln;
-        }
-        else if (fiberLocz > dataTempe[439]) {
-            opserr << "WARNING: Fiber location locz: " << fiberLocz << " above maximum Z " << dataTempe[439] << " of the defined thermal load area." << endln;
-        }*/
         // perform the bi-linear interpolation
         for (int i = 1; i < (NumFib_z + 1); i++) {
             if (fiberLocz <= dataTempe[(i + ((NumFib_y + 1) * (NumFib_z + 1) + NumFib_y + 1))]) {
-                for (int j = 1; j < NumFib_y + 1; j++) {                    
+                for (int j = 1; j < NumFib_y + 1; j++) {
                     if (fiberLocy <= dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)]) {
                         // interpolate across Z = Zi-1:
                         double Tzi_1 = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 2] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j - 1] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 2]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
-                        // interpolate across Z = Zi:                                              
+                        // interpolate across Z = Zi:
                         double Tzi = dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1] + (fiberLocy - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]) * (dataTempe[i + (NumFib_z + 1) * j] - dataTempe[i + (NumFib_z + 1) * j - NumFib_z - 1]) / (dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1)] - dataTempe[j + (NumFib_y + 1) * (NumFib_z + 1) - 1]);
-                        // interpolate across Y = fiberLocy:                        
+                         // interpolate across Y = fiberLocy:
                         return FiberTemperature = *&Tzi_1 + (fiberLocz - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]) * (*&Tzi - *&Tzi_1) / (dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y +1] - dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) + NumFib_y]);
-                        }
                     }
                 }
             }
         }
-        //delete[] dataTempe;
     }
+        //delete[] dataTempe;
+        /*
+        int y_index = -1;
+        int z_index = -1;
 
+        // Find the index in x_coords where x would be inserted to maintain order
+        for (int i = 1; i < NumFib_y + 1; ++i) {
+            if (dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1) - 1] <= fiberLocy && fiberLocy <= dataTempe[i + (NumFib_y + 1) * (NumFib_z + 1)]) {
+                y_index = i;
+                break;
+            }
+        }
+        if (y_index == -1) {
+            //opserr << "Point y-coordinate is out of the grid bounds." << fiberLocy << endln;
+        }
+
+        // Find the index in y_coords where y would be inserted to maintain order
+        for (int j = 1; j < NumFib_z + 1; ++j) {
+            if (dataTempe[j + NumFib_y + (NumFib_y + 1) * (NumFib_z + 1)] <= fiberLocz && fiberLocz <= dataTempe[j + NumFib_y + 1 + (NumFib_y + 1) * (NumFib_z + 1)]) {
+                z_index = j;
+                break;
+            }
+        }
+
+        if (z_index == -1) {
+            //opserr << "Point z-coordinate is out of the grid bounds." << fiberLocz << endln;
+        }
+        //opserr << "1 = " << dataTempe[(y_index - 1) * (NumFib_z + 1) + z_index - 1] << endln;
+        //opserr << "2 = " << dataTempe[y_index * (NumFib_z + 1) + z_index - 1] << endln;
+        //opserr << "3 = " << dataTempe[(y_index - 1) * (NumFib_z + 1) + z_index] << endln;
+        //opserr << "4 = " << dataTempe[y_index * (NumFib_z + 1) + z_index] << endln;
+        return FiberTemperature = 0.25 * (dataTempe[(y_index - 1) * (NumFib_z + 1) + z_index - 1] + dataTempe[y_index * (NumFib_z + 1) + z_index - 1] + dataTempe[(y_index - 1) * (NumFib_z + 1) + z_index] + dataTempe[y_index * (NumFib_z + 1) + z_index]);
+        */
+    //}
+}
     
    /*else if (DataMixed.Size() == 35) {
         //---------------if temperature Data has 35 elements--------------------
@@ -1374,10 +1387,10 @@ FiberSectionGJThermal::determineFiberTemperature(const Vector& DataMixed, double
         }
     }*/
     
-double
+/*double
 FiberSectionGJThermal::LinearlyInterpolate(double xi, double yi, double xf, double yf, double x) {
     double a, b;
     a = (yf - yi) / (xf - xi);
     b = yi - a * xi;
     return a * x + b;
-}
+}*/

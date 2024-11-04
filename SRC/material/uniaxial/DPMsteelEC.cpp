@@ -18,12 +18,11 @@
 **                                                                    **
 ** ****************************************************************** */
                                                                         
-//Modified by:  Jian Zhang(j.zhang@ed.ac.uk)---------07,2010// 
-//              Panagiotis Kotsovinos(P.Kotsovinos@ed.ac.uk)// 
-//              Liming Jiang(Liming.Jiang@ed.ac.uk)---- 2013//
+//Modified by:  Anand Kumar IITJ---------02,2023// 
+//              
 
 
-#include <SteelDPM.h>
+#include <DPMsteelEC.h>
 #include <Vector.h>
 #include <Matrix.h>
 #include <Channel.h>
@@ -32,13 +31,14 @@
 
 #include <math.h>
 #include <float.h>
+#include <complex.h>
 
 #include <elementAPI.h>
 #include <OPS_Globals.h>
 
 
 void *
-OPS_SteelDPM()
+OPS_DPMsteelEC()
 {
   // Pointer to a uniaxial material that will be returned
   UniaxialMaterial *theMaterial = 0;
@@ -48,19 +48,19 @@ OPS_SteelDPM()
   int numData = 1;
 
   if (OPS_GetIntInput(&numData, iData) != 0) {
-    opserr << "WARNING invalid uniaxialMaterial SteelDPM tag" << endln;
+    opserr << "WARNING invalid uniaxialMaterial DPMsteelEC tag" << endln;
     return 0;
   }
 
   numData = OPS_GetNumRemainingInputArgs();
 
   if (numData != 3 && numData != 7) {
-    opserr << "Invalid #args, want: uniaxialMaterial SteelDPM " << iData[0] << " fy? E? b? <a1? a2? a3? a4?>>" << endln;
+    opserr << "Invalid #args, want: uniaxialMaterial DPMsteelEC " << iData[0] << " fy? E? b? <a1? a2? a3? a4?>>" << endln;
     return 0;
   }
 
   if (OPS_GetDoubleInput(&numData, dData) != 0) {
-    opserr << "Invalid #args, want: uniaxialMaterial SteelDPM " << iData[0] << " fy? E? b? <a1? a2? a3? a4?>>" << endln;
+    opserr << "Invalid #args, want: uniaxialMaterial DPMsteelEC " << iData[0] << " fy? E? b? <a1? a2? a3? a4?>>" << endln;
     return 0;
   }
 
@@ -72,13 +72,13 @@ OPS_SteelDPM()
   }
 
   // Parsing was successful, allocate the material
-  theMaterial = new SteelDPM(iData[0], dData[0], dData[1], 
+  theMaterial = new DPMsteelEC(iData[0], dData[0], dData[1], 
 				   dData[2], dData[3], dData[4], 
 				   dData[5], dData[6]);
   
   
   if (theMaterial == 0) {
-    opserr << "WARNING could not create uniaxialMaterial of type SteelDPM Material\n";
+    opserr << "WARNING could not create uniaxialMaterial of type DPMsteelEC Material\n";
     return 0;
   }
 
@@ -86,59 +86,63 @@ OPS_SteelDPM()
 }
 
 
-SteelDPM::SteelDPM
+DPMsteelEC::DPMsteelEC
 (int tag, double FY, double E, double B,
- double A1, double A2, double A3, double A4):
-   UniaxialMaterial(tag,MAT_TAG_SteelDPM),
-   fyT(FY), E0T(E), b(B), a1(A1), a2(A2), a3(A3), a4(A4)
+    double A1, double A2, double A3, double A4) :
+    UniaxialMaterial(tag, MAT_TAG_DPMsteelEC),
+    fyT(FY), E0T(E), b(B), a1(A1), a2(A2), a3(A3), a4(A4)
 {
-   // Sets all history and state variables to initial values
-   // History variables
-   CminStrain = 0.0;
-   CmaxStrain = 0.0;
-   CshiftP = 1.0;
-   CshiftN = 1.0;
-   Cloading = 0;
-   Ctemperature = 0;   //Added by Liming,2013
-   Cmono = true;    //Added by Liming,2013
+    // Sets all history and state variables to initial values
+    // History variables
+    CminStrain = 0.0;
+    CmaxStrain = 0.0;
+    CshiftP = 1.0;
+    CshiftN = 1.0;
+    Cloading = 0;
+    Ctemperature = 0;    //Added by Liming,2013
+    Cmono = true;    //Added by Liming,2013
 
-   TminStrain = 0.0;
-   TmaxStrain = 0.0;
-   TshiftP = 1.0;
-   TshiftN = 1.0;
-   Tloading = 0;
-   Ttemperature = 0;   //Added by Liming,2013
-   Tmono = true;   //Added by Liming,2013
-   
-   // State variables
-   Cstrain = 0.0;
-   Cstress = 0.0;
-   //Ctangent = E0;
+    TminStrain = 0.0;
+    TmaxStrain = 0.0;
+    TshiftP = 1.0;
+    TshiftN = 1.0;
+    Tloading = 0;
+    Ttemperature = 0;    //Added by Liming,2013
+    Tmono = true;    //Added by Liming,2013
 
-   Ctangent = E0T;///JZ, 07/10//
-   Cmodulus = E0T; //added by Princeton
-   
+    // State variables
+    Cstrain = 0.0;
+    Cstress = 0.0;
+    //Ctangent = E0;
 
-   Tstrain = 0.0;
-   Tstress = 0.0;
-   // Ttangent = E0;
+    Ctangent = E0T;///JZ, 07/10//
+    Cmodulus = E0T; //added by Princeton
 
-   Ttangent = E0T;///JZ, 07/10//
-   Tmodulus = E0T; //added by Princeton
 
-   // AddingSensitivity:BEGIN /////////////////////////////////////
-   parameterID = 0;
-   SHVs = 0;
-   // AddingSensitivity:END //////////////////////////////////////
+    Tstrain = 0.0;
+    Tstress = 0.0;
+    // Ttangent = E0;
 
-   ThermalElongation = 0; //initialize //JZ, 07/10//
-   E0 = E0T;//JZ, 07/10//
-   fy = fyT;//JZ, 07/10//
-   fp = 0;//JZ, 11/10//
-	  
+    Ttangent = E0T;///JZ, 07/10//
+    Tmodulus = E0T; //added by Princeton
+
+    // AddingSensitivity:BEGIN /////////////////////////////////////
+    parameterID = 0;
+    SHVs = 0;
+    // AddingSensitivity:END //////////////////////////////////////
+
+    ThermalElongation = 0; //initialize //JZ, 07/10//
+    E0 = E0T;//JZ, 07/10//
+    fy = fyT;//JZ, 07/10//
+    fp = 0.0;//JZ, 11/10//
+    fu = 0.0; // Added by Anand Kumar IITJ  
+    eplasP = 0.0; //Added by Anand Kumar IITJ : Previous Plastic Strain  
+    eplas = 0.0;  //Added by Anand Kumar IITJ : Current Plastic Srain
+    alpP = 0.0;   //Added by Anand Kumar IITJ : Previous alpha
+    alp = 0.0;    //Added by Anand Kumar IITJ : Current alpha
 }
 
-SteelDPM::SteelDPM():UniaxialMaterial(0,MAT_TAG_SteelDPM),
+DPMsteelEC::DPMsteelEC():UniaxialMaterial(0,MAT_TAG_DPMsteelEC),
  //fy(0.0), E0(0.0), b(0.0), a1(0.0), a2(0.0), a3(0.0), a4(0.0)
  fyT(0.0), E0T(0.0), b(0.0), a1(0.0), a2(0.0), a3(0.0), a4(0.0) //JZ, 07/10//
 {
@@ -157,7 +161,7 @@ SteelDPM::SteelDPM():UniaxialMaterial(0,MAT_TAG_SteelDPM),
 	  Tmono = true;      //Added by Liming,2013
 }
 
-SteelDPM::~SteelDPM()
+DPMsteelEC::~DPMsteelEC()
 {
     // AddingSensitivity:BEGIN /////////////////////////////////////
     if (SHVs != 0)
@@ -165,7 +169,7 @@ SteelDPM::~SteelDPM()
     // AddingSensitivity:END //////////////////////////////////////
 }
 
-int SteelDPM::setTrialStrain(double strain, double FiberTemperature, double strainRate)
+int DPMsteelEC::setTrialStrain(double strain, double FiberTemperature, double strainRate)
 {
 
   Ttemperature  = FiberTemperature;    //Added by Liming,2013
@@ -194,12 +198,13 @@ int SteelDPM::setTrialStrain(double strain, double FiberTemperature, double stra
 	 // To enable 0 dStrain in the first iteration for new thermal action step
 	 // The material stress may change due to the degraded modulus.---added by Liming, 2013, OCT//
      
+     
    }
 
    return 0;
 }
 
-int SteelDPM::setTrial (double strain, double &stress, double &tangent, double strainRate)
+int DPMsteelEC::setTrial (double strain, double &stress, double &tangent, double strainRate)
 {
    // Reset history variables to last converged state
    TminStrain = CminStrain;
@@ -229,7 +234,7 @@ int SteelDPM::setTrial (double strain, double &stress, double &tangent, double s
    return 0;
 }
 
-void SteelDPM::determineTrialState (double dStrain)
+void DPMsteelEC::determineTrialState (double dStrain)
 {
       double fyOneMinusB = fy * (1.0 - b);
 
@@ -283,214 +288,57 @@ void SteelDPM::determineTrialState (double dStrain)
 	  Ttangent = E0;
       else
 	  Ttangent = Esh;
-
-
-      //Princeton code starts:
-
+      
+      //Anand Kumar IITJ code starts:
       if ((E0 != E0T)) {
-
-          int position = 1;
-
-          double e = Tstrain;
-          double epl = Cstrain - Cstress / (Cmodulus);
+          double e = Tstrain;     
+          //double epl = Cstrain - Cstress / (Cmodulus);   
           double ep = (fp / E0);
           double ey = 0.02;
-          double absepeff = 0;
-          double absepeff2 = 0;
-          double epeff = 0;
-          double epeff2 = 0;
-          int seg = 0;
-
+          
           int sign = 0;
-          int signpl = 0;
           if (e < 0) {
               sign = -1;
           }
           else {
               sign = 1;
-          }
-
-          if (epl < 0) {
-              signpl = -1;
-          }
-          else {
-              signpl = 1;
-          }
-
-          int n = 500;
-          double eps[500 + 1];
-          double sig[500 + 1];
-          double epl_prop[500 + 1];
-          double fepeff = 0;
-
+          }          
           double cfun = (pow((fy - fp), 2)) / ((ey - ep) * E0 - 2 * (fy - fp));
-          double bfun = cfun * (ey - ep) * E0 + pow(cfun, 2);
-          double afun = (ey - ep) * (ey - ep + cfun / E0);
-
-          int i;
-
-          for (i = 0; i < (n + 1); i++)
-          {
-              eps[i] = ep + i * (ey - ep) / n;
-          }
-
-          for (i = 0; i < (n + 1); i++)
-          {
-              sig[i] = fp - cfun + (sqrt(bfun) / sqrt(afun)) * pow((afun - pow((ey - eps[i]), 2)), 0.5);
-
-          }
-
-          for (i = 0; i < (n + 1); i++)
-          {
-              epl_prop[i] = eps[i] - sig[i] / E0;
-
-          }
-
-
-          if ((fabs(epl) + fy / E0) < 0.02)
-          {
-              for (i = 1; i < (n + 1); i++)
-              {
-                  if (epl_prop[n - i] <= fabs(epl) && fabs(epl) <= epl_prop[n - i + 1]) {
-                      seg = n - i;
-                  }
-              }
-
-              absepeff = eps[seg] + (fabs(epl) - epl_prop[seg]) / (epl_prop[seg + 1] - epl_prop[seg]) * (eps[seg + 1] - eps[seg]);
-          }
-          else
-              absepeff = fabs(epl) + fy / E0;
-
-
-          absepeff = signpl * absepeff;
-          absepeff2 = absepeff - signpl * 2 * ep;
-
-
-          epeff = fmax(absepeff, absepeff2);
-          epeff2 = fmin(absepeff, absepeff2);
-
-          seg = 0;
-
-          if ((fabs(epl) + fy / E0) < 0.02)
-          {
-              if ((e <= epeff) && (e >= epeff2)) {
-                  c = E0 * (e - epl);
-                  position = 0;
-                  Ttangent = E0;
-              }
-
-              else if ((e >= 0.02) || (e <= -0.02)) {
-                  c = sign * fy;
-                  Ttangent = (1E-10) * E0;
-              }
-
-              else if (e > epeff || e < epeff2) {
-
-                  if (epl >= 0) {
-
-                      if (fabs(e) > fabs(epeff)) {
-                          for (i = 1; i < (n + 1); i++)
-                          {
-                              if ((eps[n - i] <= fabs(e)) && (fabs(e) <= eps[n - i + 1])) {
-                                  seg = n - i;
-                              }
-                          }
-                          c = sign * (sig[seg] + (sig[seg + 1] - sig[seg]) * (fabs(e) - eps[seg]) / (eps[seg + 1] - eps[seg]));
-                          Ttangent = fabs((sig[seg + 1] - sig[seg]) / (eps[seg + 1] - eps[seg]));
-                      }
-
-                      else
-                      {
-                          for (i = 1; i < (n + 1); i++)
-                          {
-                              if ((eps[n - i] <= fabs(epeff)) && (fabs(epeff) <= eps[n - i + 1])) {
-                                  seg = n - i;
-                              }
-                          }
-                          fepeff = signpl * (sig[seg] + (sig[seg + 1] - sig[seg]) * (fabs(epeff) - eps[seg]) / (eps[seg + 1] - eps[seg]));
-                          c = (fepeff - 2 * fp) - fabs(((2 * fepeff - 2 * fp) / (epeff2 + epeff)) * (e - epeff2));
-                          Ttangent = fabs(((2 * fepeff - 2 * fp) / (epeff2 + epeff)));
-
-                      }
-                  }
-
-                  else if (epl < 0) {
-
-                      if (fabs(e) > fabs(epeff2)) {
-                          for (i = 1; i < (n + 1); i++)
-                          {
-                              if ((eps[n - i] <= fabs(e)) && (fabs(e) <= eps[n - i + 1])) {
-                                  seg = n - i;
-                              }
-                          }
-                          c = sign * (sig[seg] + (sig[seg + 1] - sig[seg]) * (fabs(e) - eps[seg]) / (eps[seg + 1] - eps[seg]));
-                          Ttangent = fabs((sig[seg + 1] - sig[seg]) / (eps[seg + 1] - eps[seg]));
-                      }
-
-                      else
-                      {
-
-                          for (i = 1; i < (n + 1); i++)
-                          {
-                              if ((eps[n - i] <= fabs(epeff2)) && (fabs(epeff2) <= eps[n - i + 1])) {
-                                  seg = n - i;
-                              }
-                          }
-                          double fepeff2 = signpl * (sig[seg] + (sig[seg + 1] - sig[seg]) * (fabs(epeff2) - eps[seg]) / (eps[seg + 1] - eps[seg]));
-                          c = (fepeff2 + 2 * fp) + fabs(((2 * fepeff2 + 2 * fp) / (epeff2 + epeff)) * (e - epeff));
-                          Ttangent = fabs(((2 * fepeff2 + 2 * fp) / (epeff2 + epeff)));
-                      }
-                  }
-              }
-          }
-
-          else
-          {
-              if ((e <= epeff) && (e >= epeff2)) {
-                  c = E0 * (e - epl);
-                  position = 0;
-                  Ttangent = E0;
-              }
-
-              else if (fabs(e) > fmax(fabs(epeff), fabs(epeff2))) {
-                  c = sign * fy;
-                  Ttangent = (1E-10) * E0;
-              }
-
-              else if (e > epeff || e < epeff2) {
-                  if (epl >= 0) {
-                      double fepeff = fy;
-                      c = (fepeff - 2 * fp) - fabs(((2 * fepeff - 2 * fp) / (epeff2 + epeff)) * (e - epeff2));
-                      Ttangent = fabs(((2 * fepeff - 2 * fp) / (epeff2 + epeff)));
-                  }
-
-                  else
-                  {
-                      double fepeff2 = -fy;
-                      c = (fepeff2 + 2 * fp) + fabs(((2 * fepeff2 + 2 * fp) / (epeff + epeff2)) * (e - epeff));
-                      Ttangent = fabs(((2 * fepeff2 + 2 * fp) / (epeff2 + epeff)));
-                  }
-              }
-          }
-
-          int signcheck = 0;
-          if (c < 0) {
-              signcheck = -1;
+          double bfun = sqrt(cfun * (ey - ep) * E0 + pow(cfun, 2));
+          double afun = sqrt((ey - ep) * (ey - ep + cfun / E0));
+  
+          double sig_trial = E0 * (e - eplasP);
+          double r, G;
+          this->yield_funtion(E0, afun, bfun, cfun, alpP, fp, fy, fu, ey, r, G);
+          if ((fabs(sig_trial) - r) < 0) {
+              c = sig_trial;
+              Ttangent = E0;
+              eplas = eplasP;
+              alp = alpP;
           }
           else {
-              signcheck = 1;
+              double sig_trial1 = E0 * (e - eplasP);
+              double stress11;
+              double E_tgt11;
+              double eplas11;
+              double alp11;
+              this->Nr(sig_trial1, E0, afun, bfun, cfun, eplasP, fp, fy, fu, ey, alpP, stress11, E_tgt11, eplas11, alp11);
+              c = stress11;
+              if (E_tgt11 <= 10.0) {
+                  Ttangent = 10.0;
+              }
+              else {
+                  Ttangent = E_tgt11;
+              }               
+              eplas = eplas11;
+              alp = alp11;
           }
 
-          if (fabs(c) > fy) {
-              c = signcheck * fy;
-          }
-
-          Tstress = c;
-          Tmodulus = E0;
+          Tstress = c;          
+          Tmodulus = E0;  
       }
-      // Princeton code ends.
-
-	  
+      // Anand Kumar IITJ code ends.
+  
       if (Tloading == 0 && dStrain != 0.0) {
 	  if (dStrain > 0.0)
 	    Tloading = 1;
@@ -526,34 +374,34 @@ void SteelDPM::determineTrialState (double dStrain)
 }
 
 
-double SteelDPM::getStrain ()
+double DPMsteelEC::getStrain ()
 {
    return Tstrain;
 }
 
-double SteelDPM::getStress ()
+double DPMsteelEC::getStress ()
 {
    return Tstress;
 }
 
-double SteelDPM::getTangent ()
+double DPMsteelEC::getTangent ()
 {
    return Ttangent; 
 }
 
 double 
-SteelDPM::getThermalElongation(void) //***JZ
+DPMsteelEC::getThermalElongation(void) //***JZ
 {
   return ThermalElongation;
 }
 
 //JZ 07/10 /////////////////////////////////////////////////////////////start
 double 
-SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTmax) //PK add to include max temp
+DPMsteelEC::getElongTangent(double TempT, double &ET, double &Elong, double TempTmax) //PK add to include max temp
 {
   //JZ updated, from rebar to C steel
   
-  // EN 1992 pt 1-2-1. Class N hot rolled  reinforcing steel at elevated temperatures
+  // EN 1992 pt 1-2-1. Class N hot rolled  reinforcing steel at elevated temperatures   
     if (TempT <= 80) {
         fy = fyT;
         E0 = E0T;
@@ -561,6 +409,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=TempT*0.00325/80;
 
         fp = fyT;
+        fu =  1.25 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 180) {
         fy = fyT;
@@ -569,7 +418,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=0.00325+(TempT - 80)*0.00325/100;
 
         fp = fyT * (1 - (TempT - 80) * (1 - 0.807) / 100);
-
+        fu = 1.25 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 280) {
         fy = fyT;
@@ -578,6 +427,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=0.0065+(TempT - 180)*0.00325/100;
 
         fp = fyT * (0.807 - (TempT - 180) * (0.807 - 0.613) / 100);
+        fu = 1.25 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 380) {
         fy = fyT;
@@ -586,6 +436,8 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=0.00975+(TempT - 280)*0.00355/100;
 
         fp = fyT * (0.613 - (TempT - 280) * (0.613 - 0.42) / 100);
+        fu = (2 - 0.0025 * TempT) * fy; //Added by Anand Kumar
+        //fu = 1.01 * fy;
     }
     else if (TempT <= 480) {
         fy = fyT * (1 - (TempT - 380) * 0.22 / 100);
@@ -594,6 +446,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=0.0133+(TempT - 380)*0.0133/100;
 
         fp = fyT * (0.42 - (TempT - 380) * (0.42 - 0.36) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 580) {
         fy = fyT * (0.78 - (TempT - 480) * 0.31 / 100);
@@ -602,6 +455,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //b=0.0266+(TempT - 480)*0.0136/100;
 
         fp = fyT * (0.36 - (TempT - 480) * (0.36 - 0.18) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 680) {
         fy = fyT * (0.47 - (TempT - 580) * 0.24 / 100);
@@ -610,6 +464,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         // b=0.0402-(TempT - 580)*0.0067/100;
 
         fp = fyT * (0.18 - (TempT - 580) * (0.18 - 0.075) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 780) {
         fy = fyT * (0.23 - (TempT - 680) * 0.12 / 100);
@@ -617,7 +472,8 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
 
         // b=0.0335-(TempT - 680)*0.0067/100;
 
-        fp = fyT * (0.075 - (TempT - 680) * (0.075 - 0.05) / 100); //Typos was there, 0.05 iscorrected by Princeton
+        fp = fyT * (0.075 - (TempT - 680) * (0.075 - 0.05) / 100); 
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 880) {
         fy = fyT * (0.11 - (TempT - 780) * 0.05 / 100);
@@ -626,6 +482,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //  b=0.0268-(TempT - 780)*0.0067/100;
 
         fp = fyT * (0.05 - (TempT - 780) * (0.05 - 0.0375) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 980) {
         fy = fyT * (0.06 - (TempT - 880) * 0.02 / 100);
@@ -634,6 +491,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //  b=0.0201-(TempT - 880)*0.0067/100;
 
         fp = fyT * (0.0375 - (TempT - 880) * (0.0375 - 0.025) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 1080) {
         fy = fyT * (0.04 - (TempT - 980) * 0.02 / 100);
@@ -642,6 +500,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         // b=0.0134-(TempT - 980)*0.0067/100;
 
         fp = fyT * (0.025 - (TempT - 980) * (0.025 - 0.0125) / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else if (TempT <= 1180) {
         fy = fyT * (0.02 - (TempT - 1080) * 0.02 / 100);
@@ -650,13 +509,15 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
         //  b=0.0067-(TempT - 980)*0.0067/100;
 
         fp = fyT * (0.0125 - (TempT - 1080) * 0.0125 / 100);
+        fu = 1.01 * fy; //Added by Anand Kumar
     }
     else {
-        opserr << "the temperature is invalid\n";
+        opserr << "the temperature is invalid23\n";
     }
 
-  // caculation of thermal elongation of reinforcing steel. JZ	
-	if (TempT <= 1) {
+  // caculation of thermal elongation of reinforcing steel. JZ
+///*	
+  if (TempT <= 1) {
 		  ThermalElongation = TempT * 1.2164e-5;
 	  }
   else if (TempT <= 730) {
@@ -669,7 +530,7 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
       ThermalElongation = -6.2e-3 + 2e-5*(TempT+20);
   }
   else {
-	  opserr << "the temperature is invalid\n";
+	  opserr << "the temperature is invalid25\n";
   }
 
   //ThermalElongation = 0 ;   //debug  Liming
@@ -679,13 +540,12 @@ SteelDPM::getElongTangent(double TempT, double &ET, double &Elong, double TempTm
 
   //opserr << "\getelongation: " << ET << "\ temp:" << TemperautreC <<endln; //PK Check
 
-
   return 0;
 }
 //JZ 07/10 /////////////////////////////////////////////////////////////end 
 
 
-int SteelDPM::commitState ()
+int DPMsteelEC::commitState ()
 {
    // History variables
    CminStrain = TminStrain;
@@ -699,12 +559,14 @@ int SteelDPM::commitState ()
    Cstrain = Tstrain;
    Cstress = Tstress;
    Ctangent = Ttangent;
-   Cmodulus = Tmodulus; //added by Princeton
-   
+   Cmodulus = Tmodulus; //added by Anand Kumar IITJ
+   eplasP = eplas; //added by Anand Kumar IITJ
+   alpP = alp; //added by Anand Kumar IITJ
+
    return 0;
 }
 
-int SteelDPM::revertToLastCommit ()
+int DPMsteelEC::revertToLastCommit ()
 {
    // Reset trial history variables to last committed state
    TminStrain = CminStrain;
@@ -718,7 +580,10 @@ int SteelDPM::revertToLastCommit ()
    Tstrain = Cstrain;
    Tstress = Cstress;
    Ttangent = Ctangent;
-   Tmodulus = Cmodulus;  //added by Princeton
+   Tmodulus = Cmodulus;  //added by Anand Kumar IITJ
+   eplas = eplasP; //added by Anand Kumar IITJ
+   alp = alpP; //added by Anand Kumar IITJ
+
 
    // AddingSensitivity:BEGIN /////////////////////////////////
    if (SHVs != 0)
@@ -728,7 +593,7 @@ int SteelDPM::revertToLastCommit ()
    return 0;
 }
 
-int SteelDPM::revertToStart ()
+int DPMsteelEC::revertToStart ()
 {
    // History variables
    CminStrain = 0.0;
@@ -747,7 +612,7 @@ int SteelDPM::revertToStart ()
    Cstrain = 0.0;
    Cstress = 0.0;
    Ctangent = E0T;
-   Cmodulus = E0;  //added by Princeton
+   Cmodulus = E0;  //added by Anand Kumar IITJ
 
    Tstrain = 0.0;
    Tstress = 0.0;
@@ -756,9 +621,9 @@ int SteelDPM::revertToStart ()
    return 0;
 }
 
-UniaxialMaterial* SteelDPM::getCopy ()
+UniaxialMaterial* DPMsteelEC::getCopy ()
 {
-   SteelDPM* theCopy = new SteelDPM(this->getTag(), fy, E0, b,
+   DPMsteelEC* theCopy = new DPMsteelEC(this->getTag(), fy, E0, b,
 				  a1, a2, a3, a4);
 
    // Converged history variables
@@ -783,17 +648,17 @@ UniaxialMaterial* SteelDPM::getCopy ()
    theCopy->Cstrain = Cstrain;
    theCopy->Cstress = Cstress;
    theCopy->Ctangent = Ctangent;
-   theCopy->Ctemperature = Ctemperature;   theCopy->Cmodulus = Cmodulus; //added by Princeton  //added by liming,2013
+   theCopy->Ctemperature = Ctemperature;   theCopy->Cmodulus = Cmodulus; //added by Anand Kumar IITJ  //added by liming,2013
    
    // Trial state variables
    theCopy->Tstrain = Tstrain;
    theCopy->Tstress = Tstress;
    theCopy->Ttangent = Ttangent;
-   theCopy->Ctemperature = Ttemperature;   theCopy->Tmodulus = Tmodulus; //added by Princeton  //added by liming,2013
+   theCopy->Ctemperature = Ttemperature;   theCopy->Tmodulus = Tmodulus; //added by Anand Kumar IITJ  //added by liming,2013
    return theCopy;
 }
 
-int SteelDPM::sendSelf (int commitTag, Channel& theChannel)
+int DPMsteelEC::sendSelf (int commitTag, Channel& theChannel)
 {
    int res = 0;
    static Vector data(16);
@@ -825,12 +690,12 @@ int SteelDPM::sendSelf (int commitTag, Channel& theChannel)
 
    res = theChannel.sendVector(this->getDbTag(), commitTag, data);
    if (res < 0) 
-      opserr << "SteelDPM::sendSelf() - failed to send data\n";
+      opserr << "DPMsteelEC::sendSelf() - failed to send data\n";
 
    return res;
 }
 
-int SteelDPM::recvSelf (int commitTag, Channel& theChannel,
+int DPMsteelEC::recvSelf (int commitTag, Channel& theChannel,
                                 FEM_ObjectBroker& theBroker)
 {
    int res = 0;
@@ -838,7 +703,7 @@ int SteelDPM::recvSelf (int commitTag, Channel& theChannel,
    res = theChannel.recvVector(this->getDbTag(), commitTag, data);
   
    if (res < 0) {
-      opserr << "SteelDPM::recvSelf() - failed to receive data\n";
+      opserr << "DPMsteelEC::recvSelf() - failed to receive data\n";
       this->setTag(0);      
    }
    else {
@@ -877,15 +742,15 @@ int SteelDPM::recvSelf (int commitTag, Channel& theChannel,
       Tstrain = Cstrain;
       Tstress = Cstress;
       Ttangent = Ctangent;
-      Tmodulus = Cmodulus; //added by Princeton
+      Tmodulus = Cmodulus; //added by Anand Kumar IITJ
    }
     
    return res;
 }
 
-void SteelDPM::Print (OPS_Stream& s, int flag)
+void DPMsteelEC::Print (OPS_Stream& s, int flag)
 {
-   s << "SteelDPM tag: " << this->getTag() << endln;
+   s << "DPMsteelEC tag: " << this->getTag() << endln;
    s << "  fy: " << fy << " ";
    s << "  E0: " << E0 << " ";
    s << "  b:  " << b << " ";
@@ -896,9 +761,77 @@ void SteelDPM::Print (OPS_Stream& s, int flag)
 }
 
 
+///// added by Anand Kumar IITJ
+void
+DPMsteelEC::yield_funtion(double E2, double a2, double b2, double c2, double epp, double fp2, double fy2, double fu2, double ey2, double &sigy, double &G)
+{ 
+    if (epp <= (0.04 - fu2 / E2)) {
+        double q = (E2 * E2 * a2 * a2 - E2 * E2 * epp * epp + 2 * E2 * E2 * epp * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * epp - 2 * E2 * c2 * ey2 - 2 * E2 * epp * fp2 + 2 * E2 * ey2 * fp2 + b2 * b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
+
+        if (q <= 0) {
+            q = 0.0;
+        }
+
+        sigy = fp2 + ((E2 * (b2 * b2 * ey2 - b2 * b2 * epp - E2 * a2 * a2 * c2 + E2 * a2 * a2 * fp2 + a2 * b2 * sqrt(q))) / (E2 * E2 * a2 * a2 + b2 * b2) - fp2) * (1 / (1 + exp(1e10 * (epp - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * epp + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e10 * -(epp - 0.02 + fy2 / E2)))) + ((epp - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e10 * -(epp - 0.04 + fu2 / E2))));
+
+        double ep_p = epp + 1e-9;
+
+        double q1 = (E2 * E2 * a2 * a2 - E2 * E2 * ep_p * ep_p + 2 * E2 * E2 * ep_p * ey2 - E2 * E2 * ey2 * ey2 + 2 * E2 * c2 * ep_p - 2 * E2 * c2 * ey2 - 2 * E2 * ep_p * fp2 + 2 * E2 * ey2 * fp2 + b2 * b2 - c2 * c2 + 2 * c2 * fp2 - fp2 * fp2);
+        if (q1 <= 0) {
+            q1 = 0;
+        }
+
+        double sigy1 = fp2 + ((E2 * (b2 * b2 * ey2 - b2 * b2 * ep_p - E2 * a2 * a2 * c2 + E2 * a2 * a2 * fp2 + a2 * b2 * sqrt(q1))) / (E2 * E2 * a2 * a2 + b2 * b2) - fp2) * (1 / (1 + exp(1e10 * (ep_p - 0.02 + fy2 / E2)))) + (-fp2 + (50 * (fu2 - fy2) * ep_p + 2 * fy2 - fu2) * (1 / (1 - 50 * (fu2 - fy2) / E2))) * (1 / (1 + exp(1e10 * -(ep_p - 0.02 + fy2 / E2)))) + ((ep_p - 0.04 + fu2 / E2) * -(50 * fu2 - 50 * fy2) / (fy2 / 4000 - fu2 / 4000 + 1)) * (1 / (1 + exp(1e10 * -(ep_p - 0.04 + fu2 / E2))));
+        G = (fabs(sigy1 - sigy) / 1e-9);
+    }
+    else {
+        double fu_1 = (1.0 + b) * fy2; // 1+b gives the slope after (0.04, fu)
+        double H_1 = (fu_1 - fy2) / 0.02;
+        sigy = fu2 + H_1 * (epp - 0.04 + fu_1 / E2);
+        double ep_p = epp + 1e-9;
+        double sigy13 = fu2 + H_1 * (ep_p - 0.04 + fu_1 / E2);
+        G = (fabs(sigy13 - sigy) / 1e-9);
+    }
+}
+
+///// added by Anand Kumar IITJ
+void
+DPMsteelEC::Nr(double sg_trial1, double E1, double a1, double b1, double c1, double e_p, double fp1, double fy1, double fu1, double ey1, double alp_p, double &stress1, double &E_tgt, double& eplas1, double& alp1)
+{
+    int sign = 0;
+    if (sg_trial1 < 0) {
+        sign = -1;
+    }
+    else {
+        sign = 1;
+    }
+    double d_lambda = 0.0;
+    double d_d_lambda = 0.0;
+    double r1 = 0.0;
+    double G1 = 0.0;
+    double r2 = 0.0;
+    double G2 = 0.0;
+    for (int i = 0; i < 25; i++) {
+
+        this->yield_funtion(E1, a1, b1, c1, (alp_p + d_lambda), fp1, fy1, fu1, ey1, r1, G1);
+        double sg_trial = fabs(sg_trial1);
+        double rs = sg_trial - E1 * d_lambda - r1;
+        d_d_lambda = rs / (G1 + E1);
+        d_lambda = d_lambda + d_d_lambda;
+        if (fabs(d_d_lambda) <= 1e-6) {
+            break;
+        }
+    }
+    this->yield_funtion(E1, a1, b1, c1, (e_p + d_lambda), fp1, fy1, fu1, ey1, r2, G2);
+    E_tgt = E1 * G2 / (E1 + G2);
+    stress1 = sg_trial1 - E1 * d_lambda * sign;
+    eplas1 = e_p + d_lambda * sign;
+    alp1 = alp_p + d_lambda;
+}
+
 // AddingSensitivity:BEGIN ///////////////////////////////////
 int
-SteelDPM::setParameter(const char** argv, int argc, Parameter& param)
+DPMsteelEC::setParameter(const char** argv, int argc, Parameter& param)
 {
 
     if (strcmp(argv[0], "sigmaY") == 0 || strcmp(argv[0], "fy") == 0)
@@ -928,7 +861,7 @@ SteelDPM::setParameter(const char** argv, int argc, Parameter& param)
 
 
 int
-SteelDPM::updateParameter(int parameterID, Information& info)
+DPMsteelEC::updateParameter(int parameterID, Information& info)
 {
     switch (parameterID) {
     case -1:
@@ -967,7 +900,7 @@ SteelDPM::updateParameter(int parameterID, Information& info)
 
 
 int
-SteelDPM::activateParameter(int passedParameterID)
+DPMsteelEC::activateParameter(int passedParameterID)
 {
     parameterID = passedParameterID;
 
@@ -977,7 +910,7 @@ SteelDPM::activateParameter(int passedParameterID)
 
 
 double
-SteelDPM::getStressSensitivity(int gradIndex, bool conditional)
+DPMsteelEC::getStressSensitivity(int gradIndex, bool conditional)
 {
     // Initialize return value
     double gradient = 0.0;
@@ -1042,11 +975,8 @@ SteelDPM::getStressSensitivity(int gradIndex, bool conditional)
     return gradient;
 }
 
-
-
-
 double
-SteelDPM::getInitialTangentSensitivity(int gradIndex)
+DPMsteelEC::getInitialTangentSensitivity(int gradIndex)
 {
     // For now, assume that this is only called for initial stiffness 
     if (parameterID == 2) {
@@ -1059,7 +989,7 @@ SteelDPM::getInitialTangentSensitivity(int gradIndex)
 
 
 int
-SteelDPM::commitSensitivity(double TstrainSensitivity, int gradIndex, int numGrads)
+DPMsteelEC::commitSensitivity(double TstrainSensitivity, int gradIndex, int numGrads)
 {
     if (SHVs == 0) {
         SHVs = new Matrix(2, numGrads);
@@ -1140,15 +1070,15 @@ SteelDPM::commitSensitivity(double TstrainSensitivity, int gradIndex, int numGra
 
 
 //this function is no use, just for the definiation of pure virtual function.
-int SteelDPM::setTrialStrain (double strain, double strainRate)
+int DPMsteelEC::setTrialStrain (double strain, double strainRate)
 {
-  opserr << "SteelDPM::setTrialStrain (double strain, double strainRate) - should never be called\n";
+  opserr << "DPMsteelEC::setTrialStrain (double strain, double strainRate) - should never be called\n";
   return 0;
 }
 
 
 int 
-SteelDPM::getVariable(const char *variable, Information &info)
+DPMsteelEC::getVariable(const char *variable, Information &info)
 {
   if (strcmp(variable,"ThermalElongation") == 0) {
     info.theDouble = ThermalElongation;    
@@ -1175,7 +1105,7 @@ SteelDPM::getVariable(const char *variable, Information &info)
 		(*theVector)(0) = Ttemperature;
         (*theVector)(1) = ThermalElongation;
 	}else{
-		opserr<<"null Vector in SteelDPM"<<endln;
+		opserr<<"null Vector in DPMsteelEC"<<endln;
 	}
 	return 0;
  }

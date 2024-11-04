@@ -84,7 +84,6 @@ class ConcreteECThermal : public UniaxialMaterial
     double steps;    //the amount of the steps.
     double strainRatio; //input strain over 0.0025(EU 1992)  
     double ThermalElongation; // eps(theata) = alpha * temperature
-    double ThermalElong;
     double fcT;    
     double epsc0T; 
     double fcuT;   
@@ -93,8 +92,6 @@ class ConcreteECThermal : public UniaxialMaterial
     double EtsT;  
     double cooling; //PK add
     double Tempmax;  // PK add max temp
-    double TmaxP; //AK add for cooling
-    double Tmax;  //AK add for cooling
     
     
     // matpar : Concrete FIXED PROPERTIES
@@ -124,7 +121,7 @@ class ConcreteECThermal : public UniaxialMaterial
     double e;     
     double eps;   
 
-    double epsLitsp; // AK add for transient strain
+
 };
 
 

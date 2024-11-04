@@ -17,12 +17,11 @@
 **   Filip C. Filippou (filippou@ce.berkeley.edu)                     **
 **                                                                    **
 ** ****************************************************************** */
-//Modified by:  Jian Zhang(j.zhang@ed.ac.uk)---------07,2010// 
-//              Panagiotis Kotsovinos(P.Kotsovinos@ed.ac.uk)// 
-//              Liming Jiang(Liming.Jiang@ed.ac.uk)---- 2013//
+//Modified by:  Anand Kumar IITJ(j.zhang@ed.ac.uk)---------02,2023// 
+//             
                                                                                                                                                 
-#ifndef SteelDPM1_h
-#define SteelDPM1_h
+#ifndef DPMsteelEC_h
+#define DPMsteelEC_h
 
 
 #include <UniaxialMaterial.h>
@@ -33,16 +32,16 @@
 #define STEEL_01_DEFAULT_A3        0.0
 #define STEEL_01_DEFAULT_A4       55.0
 
-class SteelDPM1 : public UniaxialMaterial
+class DPMsteelEC : public UniaxialMaterial
 {
   public:
-    SteelDPM1(int tag, double fy, double E0, double b,
+    DPMsteelEC(int tag, double fy, double E0, double b,
 		   double a1 = STEEL_01_DEFAULT_A1, double a2 = STEEL_01_DEFAULT_A2,
 		   double a3 = STEEL_01_DEFAULT_A3, double a4 = STEEL_01_DEFAULT_A4);
-    SteelDPM1();
-    ~SteelDPM1();
+    DPMsteelEC();
+    ~DPMsteelEC();
 
-    const char *getClassType(void) const {return "SteelDPM1";};
+    const char *getClassType(void) const {return "DPMsteelEC";};
 
 
     double getThermalElongation(void); //***JZ

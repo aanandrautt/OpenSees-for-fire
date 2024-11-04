@@ -18,35 +18,31 @@
 **                                                                    **
 ** ****************************************************************** */
                                                                        
-// Added by Liming Jiang (UoE)
-// Created: 06/13
-//
-// Description: This file contains the class definition for 
-// ConcreteECTThermal. ConcreteECTThermal is modified from Concrete02Thermal
-// ConcreteECTthermal is dedicated to provide a concrete material which 
-// strictly satisfy Eurocode regarding the temperature dependent properties.
+// Added by Anand Kumar IITJ 
+// Created: 02/2023
+
 
 // Concrete02 is written by FMK in the year of 2006 and based on Concr2.f
 
 
 
 
-#ifndef ConcreteECTThermal_h
-#define ConcreteECTThermal_h
+#ifndef DamagePlasticityConcreteECT_h
+#define DamagePlasticityConcreteECT_h
 
 #include <UniaxialMaterial.h>
 
-class ConcreteECTThermal : public UniaxialMaterial
+class DamagePlasticityConcreteECT : public UniaxialMaterial
 {
   public:
-    ConcreteECTThermal(int tag, double _fc, double _epsc0, double _fcu,
+    DamagePlasticityConcreteECT(int tag, double _fc, double _epsc0, double _fcu,
 	     double _epscu, double _rat, double _ft, double _Ets);
 
-    ConcreteECTThermal(void);
+    DamagePlasticityConcreteECT(void);
 
-    virtual ~ConcreteECTThermal();
+    virtual ~DamagePlasticityConcreteECT();
 
-    const char *getClassType(void) const {return "ConcreteECTThermal";};    
+    const char *getClassType(void) const {return "DamagePlasticityConcreteECT";};    
     double getInitialTangent(void);
     UniaxialMaterial *getCopy(void);
 
@@ -54,9 +50,15 @@ class ConcreteECTThermal : public UniaxialMaterial
     int setTrialStrain(double strain, double rate);     //JZ this function is no use, just for the definiation of pure virtual function.
     int setTrialStrain(double strain, double FiberTemperature, double strainRate); //***JZ
 
+    double newton_raphson_(double Err, double e_elas, double initial_guess, double tolerance, int max_iterations); // added by AK
+
     double getStrain(void);      
     double getStress(void);
     double getTangent(void);
+    double getDamageC(void); //Added by anand Kumar IITJ 2024 to record the damage
+    double getDamageT(void); //Added by anand Kumar IITJ 2024 to record the damage
+    double getTstrain(void);   //Added by anand Kumar IITJ 2024 to record the ThermalStrain
+    double getLITS(void);   //Added by anand Kumar IITJ 2023 to record the Transient strain
 
     double getThermalElongation(void); //***JZ
     double getElongTangent(double, double&, double&, double);//***JZ //PK add to include max temp
@@ -72,6 +74,10 @@ class ConcreteECTThermal : public UniaxialMaterial
     void Print(OPS_Stream &s, int flag =0);
 
     int getVariable(const char *variable, Information &);
+
+    //Added by Anand Kumar IITJ 2024 for damage recorder:
+    Response* setResponse(const char** argv, int argc, OPS_Stream& theOutput);
+    int getResponse(int responseID, Information& matInfo);
     
 
     
@@ -81,6 +87,8 @@ class ConcreteECTThermal : public UniaxialMaterial
     void Tens_Envlp (double epsc, double &sigc, double &Ect);
     void Compr_Envlp (double epsc, double &sigc, double &Ect);
     //double Phi_T(double T); //AK add for transient strain
+
+    void Residual_(double ee, double& sigc, double& Ect, double Err, double e_elas); // added by AK
 
     double Temp;  // concrete temp
     double steps;    //the amount of the steps.
@@ -97,6 +105,8 @@ class ConcreteECTThermal : public UniaxialMaterial
     double Tempmax;  // PK add max temp
     double TmaxP; //AK add for cooling
     double Tmax;  //AK add for cooling
+
+    double Tstrain;
 
     
     // matpar : Concrete FIXED PROPERTIES
@@ -117,6 +127,11 @@ class ConcreteECTThermal : public UniaxialMaterial
     double sigP;  //  = stress at previous converged step
     double eP;    //   stiffness modulus at last converged step;
     
+    double e_resP; // AK added to keep track of residual strain.
+    double dcP;
+    double dtP;
+    double damageC;
+    double damageT;
     
 	double TempP; //PK add the previous temperature
 
@@ -131,6 +146,14 @@ class ConcreteECTThermal : public UniaxialMaterial
     double epsLitsp; // AK add for transient strain
     double Eps_lits; // AK add for transient strain
     double Eps_litsP;
+    double e_res; // AK added to keep track of residual strain.
+    double dc;
+    double dt;
+    double epti;
+    double eptiP;
+
+    double DelT;
+    double DelTP;
 };
 
 

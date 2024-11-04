@@ -153,8 +153,8 @@ static int nodeLoadTag = 0;
 static int eleLoadTag = 0;
 
 //Added by Anand Kumar 2023
-int NumFib_y;
-int NumFib_z;
+int NumFib_y = 0;
+int NumFib_z = 0;
 
 // 
 // THE PROTOTYPES OF THE FUNCTIONS INVOKED BY THE INTERPRETER

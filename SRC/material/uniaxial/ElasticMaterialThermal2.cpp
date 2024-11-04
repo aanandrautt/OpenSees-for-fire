@@ -24,25 +24,26 @@
                                                                         
 //
 // Description: This file contains the class implementation for 
-// ElasticMaterialThermal. 
+// ElasticMaterialThermal2. 
 //
-// What: "@(#) ElasticMaterialThermal.C, revA"
+// What: "@(#) ElasticMaterialThermal2.C, revA"
 // Modified for SIF modelling by Liming Jiang [http://openseesforfire.github.io] 
 
 
-#include <ElasticMaterialThermal.h>
+#include <ElasticMaterialThermal2.h>
 #include <Vector.h>
 #include <Channel.h>
 #include <Information.h>
 #include <Parameter.h>
 #include <string.h>
+#include <Domain.h> //Added by Anand Kumar [IITJ 2024] to get current Domain time;
 
 #include <OPS_Globals.h>
 
 #include <elementAPI.h>
 
 void *
-OPS_ElasticMaterialThermal(void)
+OPS_ElasticMaterialThermal2(void)
 {
   // Pointer to a uniaxial material that will be returned
   UniaxialMaterial *theMaterial = 0;
@@ -101,9 +102,9 @@ OPS_ElasticMaterialThermal(void)
  //opserr<< "receieved alpha"<<dData[1]<<endln;
 
   // Parsing was successful, allocate the material
-  theMaterial = new ElasticMaterialThermal(iData[0], dData1[0], dData1[1], dData2[0], dData2[1], softindex);
+  theMaterial = new ElasticMaterialThermal2(iData[0], dData1[0], dData1[1], dData2[0], dData2[1], softindex);
   if (theMaterial == 0) {
-    opserr << "WARNING could not create uniaxialMaterial of type ElasticMaterialThermal\n";
+    opserr << "WARNING could not create uniaxialMaterial of type ElasticMaterialThermal2\n";
     return 0;
   }
 
@@ -111,7 +112,7 @@ OPS_ElasticMaterialThermal(void)
 }
 
 
-ElasticMaterialThermal::ElasticMaterialThermal(int tag, double e, double alpha, double et, double eneg, int softindex)
+ElasticMaterialThermal2::ElasticMaterialThermal2(int tag, double e, double alpha, double et, double eneg, int softindex)
 :UniaxialMaterial(tag,MAT_TAG_ElasticMaterialThermal),
  trialStrain(0.0),  trialStrainRate(0.0), Epos(e),
  E0(e),Alpha(alpha),eta(et), parameterID(0),
@@ -144,12 +145,12 @@ ThermalElongation(0),Temp(0)
 			redfactors[i] = ConcreteRedfactors[i];
 	}
 	else {
-		opserr << "ElasticMaterialThermal " << this->getTag() << " recieves an invalid softening index" << endln;
+		opserr << "ElasticMaterialThermal2 " << this->getTag() << " recieves an invalid softening index" << endln;
 	}
 		
 }
 
-ElasticMaterialThermal::ElasticMaterialThermal()
+ElasticMaterialThermal2::ElasticMaterialThermal2()
 :UniaxialMaterial(0,MAT_TAG_ElasticMaterialThermal),
  trialStrain(0.0),  trialStrainRate(0.0),Epos(0.0),Eneg(0.0), Eneg0(0.0),
  E0(0.0),Alpha(0.0), eta(0.0), parameterID(0),ThermalElongation(0),Temp(0), softIndex(0), redfactors(0)
@@ -157,14 +158,14 @@ ElasticMaterialThermal::ElasticMaterialThermal()
 	
 }
 
-ElasticMaterialThermal::~ElasticMaterialThermal()
+ElasticMaterialThermal2::~ElasticMaterialThermal2()
 {
 	// does nothing
 }
 
 
 int
-ElasticMaterialThermal::setTrialStrain(double strain, double strainRate)
+ElasticMaterialThermal2::setTrialStrain(double strain, double strainRate)
 {
 	trialStrain = strain;
 	trialStrainRate = strainRate;
@@ -173,7 +174,7 @@ ElasticMaterialThermal::setTrialStrain(double strain, double strainRate)
 
 
 int
-ElasticMaterialThermal::setTrial(double strain, double &stress, double &tangent, double strainRate)
+ElasticMaterialThermal2::setTrial(double strain, double &stress, double &tangent, double strainRate)
 {
 	trialStrain = strain;
 	trialStrainRate = strainRate;
@@ -192,7 +193,7 @@ ElasticMaterialThermal::setTrial(double strain, double &stress, double &tangent,
 
 
 double
-ElasticMaterialThermal::getStress(void)
+ElasticMaterialThermal2::getStress(void)
 {
 	if (trialStrain >= 0.0)
 		return Epos*trialStrain + eta*trialStrainRate;
@@ -202,7 +203,7 @@ ElasticMaterialThermal::getStress(void)
 
 
 double
-ElasticMaterialThermal::getTangent(void)
+ElasticMaterialThermal2::getTangent(void)
 {
 	if (trialStrain > 0.0)
 		return Epos;
@@ -214,13 +215,27 @@ ElasticMaterialThermal::getTangent(void)
 
 
 double
-ElasticMaterialThermal::getInitialTangent(void)
+ElasticMaterialThermal2::getInitialTangent(void)
 {
 	return (Epos > Eneg) ? Epos : Eneg;
 }
 
+
+double
+ElasticMaterialThermal2::getCurrentTime(void)
+{
+	double currentTime = 0.0;
+	Domain* theDomain = ops_TheActiveDomain;
+
+	if (theDomain != 0) {
+		currentTime = theDomain->getCurrentTime();
+	}
+
+	return currentTime;
+}
+
 int
-ElasticMaterialThermal::commitState(void)
+ElasticMaterialThermal2::commitState(void)
 {
 	committedStrain = trialStrain;
 	committedStrainRate = trialStrainRate;
@@ -229,7 +244,7 @@ ElasticMaterialThermal::commitState(void)
 
 
 int
-ElasticMaterialThermal::revertToLastCommit(void)
+ElasticMaterialThermal2::revertToLastCommit(void)
 {
 	trialStrain = committedStrain;
 	trialStrainRate = committedStrainRate;
@@ -238,7 +253,7 @@ ElasticMaterialThermal::revertToLastCommit(void)
 
 
 int
-ElasticMaterialThermal::revertToStart(void)
+ElasticMaterialThermal2::revertToStart(void)
 {
 	trialStrain = 0.0;
 	trialStrainRate = 0.0;
@@ -247,9 +262,9 @@ ElasticMaterialThermal::revertToStart(void)
 
 
 UniaxialMaterial *
-ElasticMaterialThermal::getCopy(void)
+ElasticMaterialThermal2::getCopy(void)
 {
-	ElasticMaterialThermal *theCopy = new ElasticMaterialThermal(this->getTag(), Epos, Alpha, eta, Eneg, softIndex);
+	ElasticMaterialThermal2 *theCopy = new ElasticMaterialThermal2(this->getTag(), Epos, Alpha, eta, Eneg, softIndex);
 	theCopy->trialStrain = trialStrain;
 	theCopy->trialStrainRate = trialStrainRate;
 	theCopy->committedStrain = committedStrain;
@@ -259,7 +274,7 @@ ElasticMaterialThermal::getCopy(void)
 
 
 int
-ElasticMaterialThermal::sendSelf(int cTag, Channel &theChannel)
+ElasticMaterialThermal2::sendSelf(int cTag, Channel &theChannel)
 {
 	int res = 0;
 	static Vector data(6);
@@ -271,14 +286,14 @@ ElasticMaterialThermal::sendSelf(int cTag, Channel &theChannel)
 	data(5) = committedStrainRate;
 	res = theChannel.sendVector(this->getDbTag(), cTag, data);
 	if (res < 0)
-		opserr << "ElasticMaterialThermal::sendSelf() - failed to send data\n";
+		opserr << "ElasticMaterialThermal2::sendSelf() - failed to send data\n";
 
 	return res;
 }
 
 
 int
-ElasticMaterialThermal::recvSelf(int cTag, Channel &theChannel,
+ElasticMaterialThermal2::recvSelf(int cTag, Channel &theChannel,
 	FEM_ObjectBroker &theBroker)
 {
 	int res = 0;
@@ -286,7 +301,7 @@ ElasticMaterialThermal::recvSelf(int cTag, Channel &theChannel,
 	res = theChannel.recvVector(this->getDbTag(), cTag, data);
 
 	if (res < 0) {
-		opserr << "ElasticMaterialThermal::recvSelf() - failed to receive data\n";
+		opserr << "ElasticMaterialThermal2::recvSelf() - failed to receive data\n";
 		Epos = Eneg = 0;
 		this->setTag(0);
 	}
@@ -305,7 +320,7 @@ ElasticMaterialThermal::recvSelf(int cTag, Channel &theChannel,
 
 
 void
-ElasticMaterialThermal::Print(OPS_Stream &s, int flag)
+ElasticMaterialThermal2::Print(OPS_Stream &s, int flag)
 {
 	s << "Elastic tag: " << this->getTag() << endln;
 	s << "  Epos: " << Epos << " Eneg: " << Eneg << " eta: " << eta << endln;
@@ -313,7 +328,7 @@ ElasticMaterialThermal::Print(OPS_Stream &s, int flag)
 
 
 int
-ElasticMaterialThermal::setParameter(const char **argv, int argc, Parameter &param)
+ElasticMaterialThermal2::setParameter(const char **argv, int argc, Parameter &param)
 {
 
 	if (strcmp(argv[0], "E") == 0) {
@@ -337,7 +352,7 @@ ElasticMaterialThermal::setParameter(const char **argv, int argc, Parameter &par
 
 
 int
-ElasticMaterialThermal::updateParameter(int parameterID, Information &info)
+ElasticMaterialThermal2::updateParameter(int parameterID, Information &info)
 {
 	switch (parameterID) {
 	case 1:
@@ -360,7 +375,7 @@ ElasticMaterialThermal::updateParameter(int parameterID, Information &info)
 
 
 int
-ElasticMaterialThermal::activateParameter(int paramID)
+ElasticMaterialThermal2::activateParameter(int paramID)
 {
 	parameterID = paramID;
 
@@ -369,7 +384,7 @@ ElasticMaterialThermal::activateParameter(int paramID)
 
 
 double
-ElasticMaterialThermal::getStressSensitivity(int gradIndex, bool conditional)
+ElasticMaterialThermal2::getStressSensitivity(int gradIndex, bool conditional)
 {
 	if (parameterID == 1)
 		return trialStrain;
@@ -385,7 +400,7 @@ ElasticMaterialThermal::getStressSensitivity(int gradIndex, bool conditional)
 
 
 double
-ElasticMaterialThermal::getTangentSensitivity(int gradIndex)
+ElasticMaterialThermal2::getTangentSensitivity(int gradIndex)
 {
 	if (parameterID == 1)
 		return 1.0;
@@ -399,7 +414,7 @@ ElasticMaterialThermal::getTangentSensitivity(int gradIndex)
 
 
 double
-ElasticMaterialThermal::getInitialTangentSensitivity(int gradIndex)
+ElasticMaterialThermal2::getInitialTangentSensitivity(int gradIndex)
 {
 	if (parameterID == 1)
 		return 1.0;
@@ -413,7 +428,7 @@ ElasticMaterialThermal::getInitialTangentSensitivity(int gradIndex)
 
 
 int
-ElasticMaterialThermal::commitSensitivity(double strainGradient,
+ElasticMaterialThermal2::commitSensitivity(double strainGradient,
 	int gradIndex, int numGrads)
 {
 	// Nothing to commit ... path independent
@@ -424,13 +439,14 @@ ElasticMaterialThermal::commitSensitivity(double strainGradient,
 
 //Liming for updating the reduction factors////////////start
 double
-ElasticMaterialThermal::getElongTangent(double TempT, double &ET, double &Elong, double TempTmax)
+ElasticMaterialThermal2::getElongTangent(double TempT, double &ET, double &Elong, double TempTmax)
 {
 	ThermalElongation = 0;
 	Temp = TempT;
+	double PeakTime = getCurrentTime();
 	if (softIndex != 0) {
 		
-		for (int i = 0; i<13; i++) {
+		/*for (int i = 0; i<13; i++) {
 			if (Temp <= 80 + 100 * i)
 			{
 				if (i == 0) {
@@ -448,7 +464,35 @@ ElasticMaterialThermal::getElongTangent(double TempT, double &ET, double &Elong,
 				break;
 			}
 
+		}*/
+
+		//Added by Anand Kumar IITJ 2024 --START--
+		if (PeakTime <= 5400.0) {
+			for (int i = 0; i < 13; i++) {
+				if (Temp <= 80 + 100 * i)
+				{
+					if (i == 0) {
+						Epos = E0 * (1.0 - Temp * (1.0 - redfactors[0]) / 80);
+						Eneg = Eneg0 * (1.0 - Temp * (1.0 - redfactors[0]) / 80);
+					}
+					else if (i == 12) {
+						opserr << "Warning:The temperature " << Temp << " for SteelECthermal is out of range\n";
+						return -1;
+					}
+					else {
+						Epos = E0 * (redfactors[i - 1] - (Temp + 20 - 100 * i) * (redfactors[i - 1] - redfactors[i]) / 100);
+						Eneg = Eneg0 * (redfactors[i - 1] - (Temp + 20 - 100 * i) * (redfactors[i - 1] - redfactors[i]) / 100);
+					}
+					break;
+				}
+
+			}
 		}
+		else {
+			Epos = 0.0001;
+			Eneg = 0.001;
+		}
+		//Added by Anand Kumar IITJ 2024 --END--
 
 		if (softIndex == 1) {
 			if (Temp <= 1) {
@@ -489,13 +533,13 @@ ElasticMaterialThermal::getElongTangent(double TempT, double &ET, double &Elong,
 }
 
 double
-ElasticMaterialThermal::getThermalElongation(void)
+ElasticMaterialThermal2::getThermalElongation(void)
 {
 	return ThermalElongation;
 }
 
 int
-ElasticMaterialThermal::getVariable(const char *variable, Information &info)
+ElasticMaterialThermal2::getVariable(const char *variable, Information &info)
 {
 	if (strcmp(variable, "ThermalElongation") == 0) {
 		info.theDouble = ThermalElongation;

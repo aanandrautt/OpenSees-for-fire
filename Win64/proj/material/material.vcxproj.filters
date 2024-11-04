@@ -1103,16 +1103,10 @@
     <ClCompile Include="..\..\..\SRC\material\nD\DruckerPragerThermal.cpp">
       <Filter>nD</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\ConcreteECThermal.cpp">
-      <Filter>uniaxial</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\SRC\material\uniaxial\ElasticMaterialThermal.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\SRC\material\uniaxial\StainlessECThermal.cpp">
-      <Filter>uniaxial</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\SteelECThermal.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\SRC\material\uniaxial\BoucWenOriginal.cpp">
@@ -1160,16 +1154,19 @@
     <ClCompile Include="..\..\..\SRC\material\section\CompositeShellSectionThermal.cpp">
       <Filter>section</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\ConcreteECTThermal.cpp">
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\ElasticMaterialThermal2.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\SteelDPM.cpp">
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\DamagePlasticityConcreteECT.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\SteelDPM1.cpp">
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\DPMsteelEC.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SRC\material\uniaxial\DamagePlasticConcreteECTThermal.cpp">
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\ConcreteECThermal.cpp">
+      <Filter>uniaxial</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\SRC\material\uniaxial\SteelECThermal.cpp">
       <Filter>uniaxial</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2129,16 +2126,10 @@
     <ClInclude Include="..\..\..\SRC\material\nD\DruckerPragerThermal.h">
       <Filter>nD</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\ConcreteECThermal.h">
-      <Filter>uniaxial</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\SRC\material\uniaxial\ElasticMaterialThermal.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\SRC\material\uniaxial\StainlessECThermal.h">
-      <Filter>uniaxial</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\SteelECThermal.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\SRC\material\uniaxial\BoucWenOriginal.h">
@@ -2186,16 +2177,19 @@
     <ClInclude Include="..\..\..\SRC\material\section\CompositeShellSectionThermal.h">
       <Filter>section</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\ConcreteECTThermal.h">
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\ElasticMaterialThermal2.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\SteelDPM.h">
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\DamagePlasticityConcreteECT.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\SteelDPM1.h">
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\DPMsteelEC.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\SRC\material\uniaxial\DamagePlasticConcreteECTThermal.h">
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\ConcreteECThermal.h">
+      <Filter>uniaxial</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\SRC\material\uniaxial\SteelECThermal.h">
       <Filter>uniaxial</Filter>
     </ClInclude>
   </ItemGroup>
