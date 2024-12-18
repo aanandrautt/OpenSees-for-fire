@@ -128,6 +128,8 @@ extern void *OPS_SteelECThermal(void); // L.Jiang [SIF]
 extern void *OPS_ConcreteECThermal(void);// L.Jiang [SIF]
 extern void* OPS_DPMsteelEC(void); //Anand Kumar
 extern void* OPS_DamagePlasticityConcreteECT(void); //Anand Kumar
+extern void* OPS_DamagePlasticityConcreteASCE(void); //Anand Kumar
+extern void* OPS_DamagePlasticityConcreteADTH(void); //Anand Kumar
 extern void* OPS_ElasticMaterialThermal2(void); //Anand Kumar
 extern void *OPS_ElasticMaterialThermal(void); //L.Jiang[SIF]
 extern void* OPS_JointEPMaterial(void); //L.Jiang[SIF]
@@ -617,6 +619,22 @@ TclModelBuilderUniaxialMaterialCommand (ClientData clientData, Tcl_Interp *inter
                 return TCL_ERROR;
             // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
         }
+    else if (strcmp(argv[1], "DamagePlasticityConcreteASCE") == 0) {
+        void* theMat = OPS_DamagePlasticityConcreteASCE();
+        if (theMat != 0)
+            theMaterial = (UniaxialMaterial*)theMat;
+        else
+            return TCL_ERROR;
+        // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
+        }
+    else if (strcmp(argv[1], "DamagePlasticityConcreteADTH") == 0) {
+            void* theMat = OPS_DamagePlasticityConcreteADTH();
+            if (theMat != 0)
+                theMaterial = (UniaxialMaterial*)theMat;
+            else
+                return TCL_ERROR;
+            // end of adding More thermo-mechanical uniaxial materials, Anand Kumar IITJ [2023]
+       }
     else if (strcmp(argv[1], "ElasticMaterialThermal2") == 0) {
         void* theMat = OPS_ElasticMaterialThermal2();
         if (theMat != 0)

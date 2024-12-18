@@ -212,6 +212,8 @@
 #define MAT_TAG_ConcreteECThermal		95   //L.Jiang [SIF]
 #define MAT_TAG_DPMsteelEC		98   //Anand Kumar IITJ 
 #define MAT_TAG_DamagePlasticityConcreteECT		9090   //Anand Kumar IITJ
+#define MAT_TAG_DamagePlasticityConcreteASCE		9190   //Anand Kumar IITJ
+#define MAT_TAG_DamagePlasticityConcreteADTH		9091   //Anand Kumar IITJ
 #define MAT_TAG_ElasticMaterialThermal2          9292   //L.Jiang [SIF]
 #define MAT_TAG_BoucWenOriginal                 99
 #define MAT_TAG_DamperMaterial                  100
